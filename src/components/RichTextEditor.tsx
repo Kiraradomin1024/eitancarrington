@@ -85,6 +85,7 @@ function getCaretCoordinates(
 type FormatKey =
   | "bold"
   | "italic"
+  | "boldItalic"
   | "underline"
   | "strike"
   | "spoiler"
@@ -111,6 +112,7 @@ const FORMATS: Record<
 > = {
   bold: { label: "B", title: "Gras (Ctrl+B)", wrap: { before: "**", after: "**", placeholder: "gras" } },
   italic: { label: "I", title: "Italique (Ctrl+I)", wrap: { before: "*", after: "*", placeholder: "italique" } },
+  boldItalic: { label: "B𝘐", title: "Gras + italique", wrap: { before: "***", after: "***", placeholder: "gras italique" } },
   underline: { label: "U", title: "Souligné (Ctrl+U)", wrap: { before: "__", after: "__", placeholder: "souligné" } },
   strike: { label: "S", title: "Barré", wrap: { before: "~~", after: "~~", placeholder: "barré" } },
   spoiler: { label: "◼", title: "Spoiler", wrap: { before: "||", after: "||", placeholder: "spoiler" } },
@@ -124,7 +126,7 @@ const FORMATS: Record<
 };
 
 const ORDER: FormatKey[][] = [
-  ["bold", "italic", "underline", "strike"],
+  ["bold", "italic", "boldItalic", "underline", "strike"],
   ["code", "spoiler", "link"],
   ["h2", "h3", "quote", "ul", "ol"],
 ];
@@ -393,13 +395,15 @@ export function RichTextEditor({
                         ? " font-bold"
                         : key === "italic"
                           ? " italic"
-                          : key === "underline"
-                            ? " underline"
-                            : key === "strike"
-                              ? " line-through"
-                              : key === "code"
-                                ? " font-mono"
-                                : "")
+                          : key === "boldItalic"
+                            ? " font-bold italic"
+                            : key === "underline"
+                              ? " underline"
+                              : key === "strike"
+                                ? " line-through"
+                                : key === "code"
+                                  ? " font-mono"
+                                  : "")
                     }
                   >
                     {fmt.label}
@@ -468,7 +472,7 @@ export function RichTextEditor({
                 >
                   {(
                     [
-                      ["bold", "italic", "underline", "strike"],
+                      ["bold", "italic", "boldItalic", "underline", "strike"],
                       ["code", "spoiler"],
                       ["link"],
                     ] as FormatKey[][]

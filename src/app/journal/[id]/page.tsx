@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { canContribute, getCurrentUserAndRole } from "@/lib/auth";
+import { getCurrentUserAndRole, isAdmin } from "@/lib/auth";
 import { Card, LinkButton, PageTitle } from "@/components/ui";
 import { MarkdownContent } from "@/components/MarkdownContent";
 import type { Day } from "@/lib/types";
@@ -20,7 +20,7 @@ export default async function DayDetail({
   const supabase = await createClient();
   if (!supabase) return null;
   const { role } = await getCurrentUserAndRole();
-  const canEdit = canContribute(role);
+  const canEdit = isAdmin(role);
 
   const { data } = await supabase
     .from("days")

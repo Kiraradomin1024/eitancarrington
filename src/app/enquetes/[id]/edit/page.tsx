@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { canContribute, getCurrentUserAndRole } from "@/lib/auth";
+import { getCurrentUserAndRole, isAdmin } from "@/lib/auth";
 import { InvestigationForm } from "@/components/InvestigationForm";
 import { PageTitle } from "@/components/ui";
 import { updateInvestigation } from "../../actions";
@@ -13,7 +13,7 @@ export default async function EditInvPage({
 }) {
   const { id } = await params;
   const { role } = await getCurrentUserAndRole();
-  if (!canContribute(role)) redirect(`/enquetes/${id}`);
+  if (!isAdmin(role)) redirect(`/enquetes/${id}`);
   const supabase = await createClient();
   if (!supabase) return null;
   const { data } = await supabase

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { canContribute, getCurrentUserAndRole } from "@/lib/auth";
+import { getCurrentUserAndRole, isAdmin } from "@/lib/auth";
 import { NpcForm } from "@/components/NpcForm";
 import { PageTitle } from "@/components/ui";
 import { updateNpc } from "../../actions";
@@ -13,7 +13,7 @@ export default async function EditNpcPage({
 }) {
   const { id } = await params;
   const { role } = await getCurrentUserAndRole();
-  if (!canContribute(role)) redirect(`/wiki/${id}`);
+  if (!isAdmin(role)) redirect(`/wiki/${id}`);
   const supabase = await createClient();
   if (!supabase) return null;
   const { data } = await supabase

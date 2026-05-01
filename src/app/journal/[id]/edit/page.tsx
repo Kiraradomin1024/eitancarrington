@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { canContribute, getCurrentUserAndRole } from "@/lib/auth";
+import { getCurrentUserAndRole, isAdmin } from "@/lib/auth";
 import { DayForm } from "@/components/DayForm";
 import { PageTitle } from "@/components/ui";
 import { updateDay } from "../../actions";
@@ -13,7 +13,7 @@ export default async function EditDayPage({
 }) {
   const { id } = await params;
   const { role } = await getCurrentUserAndRole();
-  if (!canContribute(role)) redirect(`/journal/${id}`);
+  if (!isAdmin(role)) redirect(`/journal/${id}`);
   const supabase = await createClient();
   if (!supabase) return null;
   const [{ data: day }, { data: npcs }, { data: links }] = await Promise.all([

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { canContribute, getCurrentUserAndRole } from "@/lib/auth";
+import { canContribute, getCurrentUserAndRole, isAdmin } from "@/lib/auth";
 import { Empty, PageTitle } from "@/components/ui";
 import type { Npc, Relation } from "@/lib/types";
 import { RelationForm } from "@/components/RelationForm";
@@ -10,7 +10,8 @@ export default async function RelationsPage() {
   const supabase = await createClient();
   if (!supabase) return null;
   const { role } = await getCurrentUserAndRole();
-  const canEdit = canContribute(role);
+  const canAdd = canContribute(role);
+  const canEdit = isAdmin(role);
 
   const [{ data: rels }, { data: npcs }] = await Promise.all([
     supabase
@@ -31,7 +32,7 @@ export default async function RelationsPage() {
         subtitle="Liens entre Eitan et son entourage, ou entre les personnages eux-mêmes."
       />
 
-      {canEdit && (
+      {canAdd && (
         <div className="mb-8">
           <h2 className="font-serif text-xl text-accent mb-3">
             Ajouter une relation

@@ -630,6 +630,11 @@ main, header, footer { position: relative; z-index: 1; }
 /* Per-button visual cues */
 .rte-popup__btn--bold { font-weight: 800; }
 .rte-popup__btn--italic { font-style: italic; font-family: Georgia, serif; }
+.rte-popup__btn--boldItalic {
+  font-weight: 800;
+  font-style: italic;
+  font-family: Georgia, serif;
+}
 .rte-popup__btn--underline { text-decoration: underline; text-underline-offset: 2px; }
 .rte-popup__btn--strike { text-decoration: line-through; }
 .rte-popup__btn--code {

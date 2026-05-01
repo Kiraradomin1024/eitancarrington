@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { canContribute, getCurrentUserAndRole } from "@/lib/auth";
+import { canContribute, getCurrentUserAndRole, isAdmin } from "@/lib/auth";
 import {
   Badge,
   Card,
@@ -58,7 +58,8 @@ export default async function InvDetail({
   const supabase = await createClient();
   if (!supabase) return null;
   const { role } = await getCurrentUserAndRole();
-  const canEdit = canContribute(role);
+  const canAdd = canContribute(role);
+  const canEdit = isAdmin(role);
 
   const [{ data: inv }, { data: clues }, { data: linkedRaw }, { data: npcs }] =
     await Promise.all([
@@ -141,7 +142,7 @@ export default async function InvDetail({
             <h2 className="font-serif text-2xl text-accent mb-3 title-rule">
               Indices ({clueList.length})
             </h2>
-            {canEdit && <ClueForm action={addClueBound} />}
+            {canAdd && <ClueForm action={addClueBound} />}
             {clueList.length === 0 ? (
               <p className="text-muted italic mt-4">Aucun indice.</p>
             ) : (
@@ -225,7 +226,7 @@ export default async function InvDetail({
                   ))}
               </ul>
             )}
-            {canEdit && npcList.length > 0 && (
+            {canAdd && npcList.length > 0 && (
               <div className="mt-4 pt-4 border-t border-border">
                 <NpcLinker npcs={npcList} action={linkNpcBound} />
               </div>
