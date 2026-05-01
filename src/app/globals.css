@@ -490,3 +490,67 @@ main, header, footer { position: relative; z-index: 1; }
   text-align: center;
   line-height: 1.2;
 }
+
+/* ── Rich Text Editor: Split Pane ── */
+
+.rte-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.rte-split__editor {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+}
+
+.rte-split__preview {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.rte-split__label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  user-select: none;
+}
+
+.rte-split__preview-content {
+  padding: 12px 16px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--foreground);
+}
+
+.rte-split__preview-content img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 8px 0;
+}
+
+/* Stack on mobile */
+@media (max-width: 768px) {
+  .rte-split {
+    grid-template-columns: 1fr;
+  }
+  .rte-split__editor {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+}

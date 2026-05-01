@@ -5,9 +5,8 @@ import { MarkdownContent } from "@/components/MarkdownContent";
 import { useRef, useState } from "react";
 
 /**
- * A textarea with a toolbar for inserting images inline (Markdown style).
+ * A split-pane editor: Markdown textarea on the left, live preview on the right.
  * Supports drag & drop and paste of images directly into the editor.
- * Includes a live preview toggle.
  */
 export function RichTextEditor({
   name,
@@ -22,7 +21,6 @@ export function RichTextEditor({
 }) {
   const [value, setValue] = useState(defaultValue);
   const [uploading, setUploading] = useState(false);
-  const [preview, setPreview] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -39,7 +37,6 @@ export function RichTextEditor({
         const insert = `\n![image](${url})\n`;
         const next = before + insert + after;
         setValue(next);
-        // Move cursor after the inserted text
         requestAnimationFrame(() => {
           ta.focus();
           const pos = start + insert.length;
@@ -72,6 +69,8 @@ export function RichTextEditor({
     }
   }
 
+  const editorHeight = `${rows * 1.5 + 2}rem`;
+
   return (
     <div className="space-y-1.5">
       {/* Toolbar */}
@@ -79,7 +78,7 @@ export function RichTextEditor({
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          disabled={uploading || preview}
+          disabled={uploading}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
                      border border-border bg-surface hover:bg-accent-soft hover:border-accent/40
                      text-muted hover:text-foreground transition-all disabled:opacity-50"
@@ -89,27 +88,8 @@ export function RichTextEditor({
           </svg>
           {uploading ? "Upload…" : "Image"}
         </button>
-
-        {/* Preview toggle */}
-        <button
-          type="button"
-          onClick={() => setPreview(!preview)}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                     border transition-all ${
-                       preview
-                         ? "border-accent bg-accent text-white"
-                         : "border-border bg-surface hover:bg-accent-soft hover:border-accent/40 text-muted hover:text-foreground"
-                     }`}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-            <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
-            <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-          </svg>
-          Aperçu
-        </button>
-
         <span className="text-xs text-muted italic hidden sm:inline">
-          {preview ? "Mode prévisualisation" : "Tu peux coller ou glisser-déposer une image"}
+          Tu peux coller ou glisser-déposer une image
         </span>
         <input
           ref={fileRef}
@@ -127,49 +107,61 @@ export function RichTextEditor({
       {/* Hidden input for form submission */}
       <input type="hidden" name={name} value={value} />
 
-      {/* Editor / Preview */}
-      {preview ? (
-        <div
-          className="rounded-xl border border-border bg-surface p-4 min-h-[200px] overflow-auto"
-          style={{ minHeight: `${rows * 1.5 + 2}rem` }}
-        >
-          {value.trim() ? (
-            <MarkdownContent content={value} />
-          ) : (
-            <p className="text-muted italic text-sm">Rien à afficher — écris du texte puis clique sur Aperçu.</p>
-          )}
+      {/* Split pane: Editor | Preview */}
+      <div className="rte-split" style={{ minHeight: editorHeight }}>
+        {/* Left: editor */}
+        <div className="rte-split__editor">
+          <div className="rte-split__label">Éditeur</div>
+          <div className="relative flex-1">
+            <textarea
+              ref={textareaRef}
+              rows={rows}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onDrop={handleDrop}
+              onDragOver={(e) => e.preventDefault()}
+              onPaste={handlePaste}
+              placeholder={placeholder}
+              className="w-full h-full font-mono text-sm leading-relaxed !rounded-none !border-0 !bg-transparent resize-none"
+              style={{ minHeight: editorHeight }}
+            />
+            {uploading && (
+              <div className="absolute bottom-3 right-3 text-xs text-accent font-hand animate-pulse">
+                upload en cours…
+              </div>
+            )}
+          </div>
         </div>
-      ) : (
-        <div className="relative">
-          <textarea
-            ref={textareaRef}
-            rows={rows}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onDrop={handleDrop}
-            onDragOver={(e) => e.preventDefault()}
-            onPaste={handlePaste}
-            placeholder={placeholder}
-            className="w-full font-mono text-sm leading-relaxed"
-          />
-          {uploading && (
-            <div className="absolute bottom-3 right-3 text-xs text-accent font-hand animate-pulse">
-              upload en cours…
-            </div>
-          )}
+
+        {/* Right: live preview */}
+        <div className="rte-split__preview">
+          <div className="rte-split__label">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+              <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+              <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+            </svg>
+            Aperçu
+          </div>
+          <div className="rte-split__preview-content" style={{ minHeight: editorHeight }}>
+            {value.trim() ? (
+              <MarkdownContent content={value} />
+            ) : (
+              <p className="text-muted italic text-sm">
+                L&apos;aperçu apparaîtra ici en temps réel…
+              </p>
+            )}
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Syntax hint */}
-      {!preview && (
-        <p className="text-xs text-muted">
-          <strong>Markdown :</strong>{" "}
-          <code className="text-accent/80">## Titre</code>{" "}
-          <code className="text-accent/80">**gras**</code>{" "}
-          <code className="text-accent/80">*italique*</code>{" "}
-          <code className="text-accent/80">![](url)</code>
-        </p>
-      )}
+      <p className="text-xs text-muted">
+        <strong>Markdown :</strong>{" "}
+        <code className="text-accent/80">## Titre</code>{" "}
+        <code className="text-accent/80">**gras**</code>{" "}
+        <code className="text-accent/80">*italique*</code>{" "}
+        <code className="text-accent/80">![](url)</code>
+      </p>
     </div>
   );
 }
