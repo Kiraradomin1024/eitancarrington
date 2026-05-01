@@ -82,6 +82,7 @@ export function NpcLinker({
       </Field>
       <Field label="Rôle">
         <select name="role" defaultValue="suspect">
+          <option value="investigator">🔍 Enquêteur</option>
           <option value="suspect">Suspect</option>
           <option value="witness">Témoin</option>
           <option value="victim">Victime</option>

@@ -29,6 +29,26 @@ const STATUS_TONE = {
   cold: "neutral",
 } as const;
 
+const ROLE_LABELS: Record<string, string> = {
+  investigator: "🔍 Enquêteur",
+  suspect: "Suspect",
+  witness: "Témoin",
+  victim: "Victime",
+  informant: "Informateur",
+  accomplice: "Complice",
+  other: "Autre",
+};
+
+const ROLE_TONE: Record<string, "neutral" | "accent" | "warn" | "danger" | "ok"> = {
+  investigator: "accent",
+  suspect: "danger",
+  witness: "neutral",
+  victim: "warn",
+  informant: "ok",
+  accomplice: "danger",
+  other: "neutral",
+};
+
 export default async function InvDetail({
   params,
 }: {
@@ -167,7 +187,9 @@ export default async function InvDetail({
                       key={l.npc_id}
                       className="flex items-center gap-2 text-sm"
                     >
-                      <Badge tone="neutral">{l.role}</Badge>
+                      <Badge tone={ROLE_TONE[l.role] ?? "neutral"}>
+                        {ROLE_LABELS[l.role] ?? l.role}
+                      </Badge>
                       <Link
                         href={`/wiki/${l.npc_id}`}
                         className="text-foreground hover:text-foreground flex-1"
