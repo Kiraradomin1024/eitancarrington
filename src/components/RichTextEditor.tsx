@@ -147,10 +147,14 @@ export function RichTextEditor({
       {/* Syntax hint */}
       <p className="text-xs text-muted">
         <strong>Markdown :</strong>{" "}
-        <code className="text-accent/80">## Titre</code>{" "}
         <code className="text-accent/80">**gras**</code>{" "}
         <code className="text-accent/80">*italique*</code>{" "}
-        <code className="text-accent/80">![](url)</code>
+        <code className="text-accent/80">__souligné__</code>{" "}
+        <code className="text-accent/80">~~barré~~</code>{" "}
+        <code className="text-accent/80">||spoiler||</code>{" "}
+        <code className="text-accent/80">&gt; citation</code>{" "}
+        <code className="text-accent/80">- liste</code>{" "}
+        <code className="text-accent/80">```code```</code>
       </p>
     </div>
       {/* File input placed outside the main container to avoid label click forwarding */}
