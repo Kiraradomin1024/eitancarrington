@@ -12,7 +12,7 @@ export default async function MindmapPage() {
   const [{ data: char }, { data: npcs }, { data: rels }] = await Promise.all([
     supabase
       .from("character")
-      .select("id, name")
+      .select("id, name, photo_url")
       .eq("is_main", true)
       .maybeSingle(),
     supabase.from("npcs").select("*"),
@@ -33,9 +33,10 @@ export default async function MindmapPage() {
       ) : (
         <MindmapClient
           mainCharacter={
-            (char as Pick<Character, "id" | "name"> | null) ?? {
+            (char as Pick<Character, "id" | "name" | "photo_url"> | null) ?? {
               id: "main",
               name: "Eitan Carrington",
+              photo_url: null,
             }
           }
           npcs={(npcs ?? []) as Npc[]}

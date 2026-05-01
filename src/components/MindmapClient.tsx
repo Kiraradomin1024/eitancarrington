@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, memo } from "react";
 import {
   ReactFlow,
   Background,
@@ -10,12 +10,15 @@ import {
   type Edge,
   useNodesState,
   useEdgesState,
+  Handle,
+  Position,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import type { Character, Npc, Relation } from "@/lib/types";
 import { RELATION_LABELS } from "@/lib/types";
 import { useRouter } from "next/navigation";
 
+/* ── Relation edge colors ── */
 const TYPE_COLOR: Record<string, string> = {
   family: "#7c5dfa",
   friend: "#5db98a",
@@ -28,12 +31,84 @@ const TYPE_COLOR: Record<string, string> = {
   other: "#9c95ad",
 };
 
+/* ── NPC Card Node ── */
+type NpcNodeData = {
+  name: string;
+  photoUrl: string | null;
+  family: string | null;
+  occupation: string | null;
+  description: string | null;
+  status: string;
+};
+
+const NpcNode = memo(function NpcNode({ data }: { data: NpcNodeData }) {
+  const subtitle = data.family || data.occupation || null;
+  const note =
+    data.description && data.description.length > 80
+      ? data.description.slice(0, 80) + "…"
+      : data.description;
+
+  return (
+    <div className="npc-node">
+      <Handle type="target" position={Position.Top} className="!bg-transparent !border-0 !w-0 !h-0" />
+      <Handle type="source" position={Position.Bottom} className="!bg-transparent !border-0 !w-0 !h-0" />
+
+      {/* Photo */}
+      <div className="npc-node__photo">
+        {data.photoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={data.photoUrl} alt={data.name} />
+        ) : (
+          <span className="npc-node__initial">{data.name[0]}</span>
+        )}
+      </div>
+
+      {/* Info */}
+      <div className="npc-node__name">{data.name}</div>
+      {subtitle && <div className="npc-node__subtitle">{subtitle}</div>}
+      {note && <div className="npc-node__note">{note}</div>}
+    </div>
+  );
+});
+
+/* ── Main Character Node (Eitan) ── */
+type MainNodeData = {
+  name: string;
+  photoUrl: string | null;
+};
+
+const MainNode = memo(function MainNode({ data }: { data: MainNodeData }) {
+  return (
+    <div className="main-node">
+      <Handle type="target" position={Position.Top} className="!bg-transparent !border-0 !w-0 !h-0" />
+      <Handle type="source" position={Position.Bottom} className="!bg-transparent !border-0 !w-0 !h-0" />
+
+      <div className="main-node__photo">
+        {data.photoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={data.photoUrl} alt={data.name} />
+        ) : (
+          <span className="main-node__initial">{data.name[0]}</span>
+        )}
+      </div>
+      <div className="main-node__name">{data.name}</div>
+    </div>
+  );
+});
+
+/* ── Custom node type registry ── */
+const nodeTypes = {
+  npc: NpcNode,
+  main: MainNode,
+};
+
+/* ── Component ── */
 export function MindmapClient({
   mainCharacter,
   npcs,
   relations,
 }: {
-  mainCharacter: Pick<Character, "id" | "name">;
+  mainCharacter: Pick<Character, "id" | "name" | "photo_url">;
   npcs: Npc[];
   relations: Relation[];
 }) {
@@ -51,27 +126,26 @@ export function MindmapClient({
     const inner = npcs.filter((n) => directlyLinked.has(n.id));
     const outer = npcs.filter((n) => !directlyLinked.has(n.id));
 
+    // Wider spacing for card nodes
     function ring(items: Npc[], radius: number, offset = 0): Node[] {
-      const n = items.length || 1;
+      const count = items.length || 1;
       return items.map((npc, i) => {
-        const a = (i / n) * Math.PI * 2 + offset;
+        const a = (i / count) * Math.PI * 2 + offset;
         return {
           id: npc.id,
-          position: { x: cx + Math.cos(a) * radius, y: cy + Math.sin(a) * radius },
-          data: { label: npc.name, status: npc.status },
-          style: {
-            background: "rgba(255,255,255,0.85)",
-            border: "1px solid #e6dcc4",
-            color: "#1a1830",
-            borderRadius: 12,
-            padding: "10px 14px",
-            fontFamily: "Inter, system-ui",
-            fontSize: 13,
-            minWidth: 120,
-            textAlign: "center" as const,
-            boxShadow: "0 2px 8px rgba(26,24,48,0.05)",
-            backdropFilter: "blur(8px)",
+          type: "npc",
+          position: {
+            x: cx + Math.cos(a) * radius,
+            y: cy + Math.sin(a) * radius,
           },
+          data: {
+            name: npc.name,
+            photoUrl: npc.photo_url,
+            family: npc.family,
+            occupation: npc.occupation,
+            description: npc.description,
+            status: npc.status,
+          } satisfies NpcNodeData,
         };
       });
     }
@@ -79,24 +153,15 @@ export function MindmapClient({
     const nodes: Node[] = [
       {
         id: "MAIN",
+        type: "main",
         position: { x: cx, y: cy },
-        data: { label: mainCharacter.name },
-        style: {
-          background: "linear-gradient(135deg, #7c5dfa, #c084fc, #f472b6)",
-          color: "#fff",
-          border: "none",
-          borderRadius: 16,
-          padding: "14px 20px",
-          fontFamily: "'Fraunces', Georgia, serif",
-          fontSize: 18,
-          fontWeight: 500,
-          minWidth: 180,
-          textAlign: "center" as const,
-          boxShadow: "0 8px 32px rgba(124,93,250,0.35)",
-        },
+        data: {
+          name: mainCharacter.name,
+          photoUrl: mainCharacter.photo_url,
+        } satisfies MainNodeData,
       },
-      ...ring(inner, 280),
-      ...ring(outer, 520, 0.3),
+      ...ring(inner, 380),
+      ...ring(outer, 680, 0.3),
     ];
 
     const edges: Edge[] = relations.map((r) => ({
@@ -106,13 +171,20 @@ export function MindmapClient({
       label: RELATION_LABELS[r.type],
       labelStyle: {
         fill: "#7a7388",
-        fontSize: 10,
+        fontSize: 11,
         fontFamily: "Inter, system-ui",
+        fontWeight: 500,
       },
-      labelBgStyle: { fill: "#ffffff", fillOpacity: 0.85 },
+      labelBgStyle: {
+        fill: "#ffffff",
+        fillOpacity: 0.9,
+        rx: 4,
+        ry: 4,
+      },
+      labelBgPadding: [6, 3] as [number, number],
       style: {
         stroke: TYPE_COLOR[r.type] ?? "#666",
-        strokeWidth: 1 + Math.abs(r.intensity ?? 0) * 0.4,
+        strokeWidth: 1.5 + Math.abs(r.intensity ?? 0) * 0.4,
       },
       animated: r.type === "enemy" || r.type === "rival",
     }));
@@ -126,7 +198,7 @@ export function MindmapClient({
   const onNodeClick = useCallback(
     (_: unknown, node: Node) => {
       if (node.id === "MAIN") {
-        router.push("/");
+        router.push("/wiki/eitan");
       } else {
         router.push(`/wiki/${node.id}`);
       }
@@ -136,8 +208,10 @@ export function MindmapClient({
 
   return (
     <div
-      className="w-full h-[75vh] rounded-2xl border border-border overflow-hidden card !p-0"
-      style={{ background: "linear-gradient(180deg, #faf6ed 0%, #f3ecdc 100%)" }}
+      className="w-full h-[80vh] rounded-2xl border border-border overflow-hidden card !p-0"
+      style={{
+        background: "linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%)",
+      }}
     >
       <ReactFlow
         nodes={nodes}
@@ -145,26 +219,28 @@ export function MindmapClient({
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
+        nodeTypes={nodeTypes}
         fitView
-        fitViewOptions={{ padding: 0.2 }}
+        fitViewOptions={{ padding: 0.3 }}
         proOptions={{ hideAttribution: true }}
+        minZoom={0.2}
+        maxZoom={2}
       >
-        <Background color="#d4c8a8" gap={24} />
+        <Background color="var(--border)" gap={24} />
         <Controls
           style={{
-            background: "rgba(255,255,255,0.8)",
-            border: "1px solid #e6dcc4",
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
             borderRadius: 8,
-            backdropFilter: "blur(8px)",
           }}
         />
         <MiniMap
           style={{
-            background: "rgba(255,255,255,0.8)",
-            border: "1px solid #e6dcc4",
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
             borderRadius: 8,
           }}
-          maskColor="rgba(250,246,237,0.6)"
+          maskColor="rgba(0,0,0,0.1)"
           nodeColor={(n) => (n.id === "MAIN" ? "#7c5dfa" : "#c084fc")}
         />
       </ReactFlow>
