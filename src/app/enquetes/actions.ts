@@ -71,9 +71,11 @@ export async function addClue(investigationId: string, formData: FormData) {
   if (!user) throw new Error("Non authentifié");
   const content = String(formData.get("content") ?? "").trim();
   if (!content) throw new Error("Contenu requis");
+  const image_url = (formData.get("image_url") as string) || null;
   const { error } = await supabase.from("investigation_clues").insert({
     investigation_id: investigationId,
     content,
+    image_url,
     created_by: user.id,
   });
   if (error) throw new Error(error.message);

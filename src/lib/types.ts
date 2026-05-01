@@ -86,6 +86,7 @@ export type Clue = {
   id: string;
   investigation_id: string;
   content: string;
+  image_url: string | null;
   found_at: string | null;
   created_by: string | null;
 };

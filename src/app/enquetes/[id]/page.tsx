@@ -152,9 +152,25 @@ export default async function InvDetail({
                     className="flex items-start gap-3 p-3 rounded bg-surface-2 border border-border"
                   >
                     <span className="text-accent mt-1">▸</span>
-                    <span className="flex-1 text-sm text-foreground/90">
-                      {c.content}
-                    </span>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm text-foreground/90">
+                        {c.content}
+                      </span>
+                      {c.image_url && (
+                        <a
+                          href={c.image_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block mt-2"
+                        >
+                          <img
+                            src={c.image_url}
+                            alt="Photo indice"
+                            className="max-h-40 rounded-lg border border-border object-cover hover:opacity-80 transition-opacity"
+                          />
+                        </a>
+                      )}
+                    </div>
                     {canEdit && (
                       <DeleteButton
                         action={async () => {
