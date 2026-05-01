@@ -141,7 +141,7 @@ export default async function Home() {
         />
         <StatCard
           href="/journal"
-          label="Dernier jour"
+          label="Jours passés"
           value={latestDay}
           tagline="à Los Santos"
         />
