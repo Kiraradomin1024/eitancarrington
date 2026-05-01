@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, Field } from "@/components/ui";
+import { RichTextEditor } from "@/components/RichTextEditor";
 import type { Day, Npc } from "@/lib/types";
 import { useState } from "react";
 
@@ -77,11 +78,10 @@ export function DayForm({
         </div>
         <div className="md:col-span-2">
           <Field label="Récit complet">
-            <textarea
+            <RichTextEditor
               name="content"
-              rows={10}
               defaultValue={initial?.content ?? ""}
-              placeholder="Ce qui s'est passé ce jour-là…"
+              placeholder="Ce qui s'est passé ce jour-là… Tu peux ajouter des images !"
             />
           </Field>
         </div>

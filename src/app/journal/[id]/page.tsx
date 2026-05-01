@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { canContribute, getCurrentUserAndRole } from "@/lib/auth";
 import { Card, LinkButton, PageTitle } from "@/components/ui";
+import { MarkdownContent } from "@/components/MarkdownContent";
 import type { Day } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import { notFound } from "next/navigation";
@@ -67,9 +68,11 @@ export default async function DayDetail({
       )}
 
       <Card>
-        <p className="whitespace-pre-line leading-relaxed text-foreground/90">
-          {day.content ?? <span className="text-muted italic">Aucun récit.</span>}
-        </p>
+        {day.content ? (
+          <MarkdownContent content={day.content} />
+        ) : (
+          <p className="text-muted italic">Aucun récit.</p>
+        )}
       </Card>
 
       {linkedNpcs.length > 0 && (

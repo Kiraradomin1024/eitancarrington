@@ -9,7 +9,7 @@ import { Button, Card, Field } from "@/components/ui";
 export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
-  const [email, setEmail] = useState("");
+  const [pseudo, setPseudo] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -18,13 +18,17 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
+
+    // Reconstruct the fake email from the pseudo
+    const fakeEmail = `${pseudo.trim().toLowerCase().replace(/[^a-z0-9]/g, "")}@eitan.local`;
+
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: fakeEmail,
       password,
     });
     setLoading(false);
     if (error) {
-      setError(error.message);
+      setError("Pseudo ou mot de passe incorrect.");
       return;
     }
     router.push("/");
@@ -41,12 +45,13 @@ export default function LoginPage() {
       </p>
       <Card>
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
-          <Field label="Email">
+          <Field label="Pseudo">
             <input
-              type="email"
+              type="text"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={pseudo}
+              onChange={(e) => setPseudo(e.target.value)}
+              placeholder="Ton pseudo"
             />
           </Field>
           <Field label="Mot de passe">

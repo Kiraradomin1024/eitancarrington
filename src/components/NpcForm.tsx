@@ -2,6 +2,7 @@
 
 import { Button, Card, Field } from "@/components/ui";
 import { ImageUpload } from "@/components/ImageUpload";
+import { RichTextEditor } from "@/components/RichTextEditor";
 import type { Npc } from "@/lib/types";
 import { useState } from "react";
 
@@ -81,11 +82,12 @@ export function NpcForm({
           />
         </Field>
         <div className="md:col-span-2">
-          <Field label="Description">
-            <textarea
+          <Field label="Description" hint="Markdown supporté : ## Titres, **gras**, *italique*, images">
+            <RichTextEditor
               name="description"
-              rows={5}
               defaultValue={initial?.description ?? ""}
+              placeholder="Biographie, apparence, notes…"
+              rows={10}
             />
           </Field>
         </div>

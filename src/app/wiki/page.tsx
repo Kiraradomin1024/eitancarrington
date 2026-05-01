@@ -30,6 +30,24 @@ export default async function WikiPage() {
         }
       />
 
+      {/* Eitan — main character card */}
+      <Link
+        href="/wiki/eitan"
+        className="card card-glow p-5 mb-6 flex gap-4 items-center hover:border-accent/60 transition-colors block"
+      >
+        <span className="w-14 h-14 rounded-full bg-gradient-to-br from-accent via-accent-2 to-accent-3 flex items-center justify-center text-white font-display text-2xl shadow-md shrink-0">
+          E
+        </span>
+        <div>
+          <div className="font-display text-xl text-foreground">
+            Eitan Carrington
+          </div>
+          <div className="text-xs text-muted">
+            Personnage principal — voir la fiche complète
+          </div>
+        </div>
+      </Link>
+
       {npcs.length === 0 ? (
         <Empty>Aucun personnage pour le moment.</Empty>
       ) : (

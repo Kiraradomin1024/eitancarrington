@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { canContribute, getCurrentUserAndRole } from "@/lib/auth";
 import { Badge, Card, LinkButton, PageTitle } from "@/components/ui";
+import { MarkdownContent, extractHeadings } from "@/components/MarkdownContent";
 import type { Npc, Relation } from "@/lib/types";
 import { RELATION_LABELS, STATUS_LABELS } from "@/lib/types";
 import Link from "next/link";
@@ -50,6 +51,9 @@ export default async function NpcDetail({
     (othersRaw ?? []).map((o: { id: string; name: string }) => [o.id, o.name])
   );
 
+  // Extract table of contents from description
+  const headings = n.description ? extractHeadings(n.description) : [];
+
   return (
     <div>
       <PageTitle
@@ -74,6 +78,7 @@ export default async function NpcDetail({
       />
 
       <div className="grid md:grid-cols-3 gap-6">
+        {/* Sidebar — photo, infos, TOC */}
         <div className="md:col-span-1 space-y-4">
           <Card>
             {n.photo_url ? (
@@ -105,20 +110,44 @@ export default async function NpcDetail({
               </div>
             )}
           </Card>
+
+          {/* Table of contents */}
+          {headings.length > 0 && (
+            <Card>
+              <h3 className="font-display text-sm uppercase tracking-wider text-muted mb-3">
+                Sommaire
+              </h3>
+              <nav className="space-y-1">
+                {headings.map((h, i) => (
+                  <a
+                    key={i}
+                    href={`#${h.id}`}
+                    className="block text-sm text-muted hover:text-accent transition-colors link-fancy"
+                    style={{ paddingLeft: `${(h.level - 2) * 12}px` }}
+                  >
+                    {h.text}
+                  </a>
+                ))}
+              </nav>
+            </Card>
+          )}
         </div>
 
+        {/* Main content */}
         <div className="md:col-span-2 space-y-6">
           <Card>
-            <h2 className="font-serif text-2xl text-accent mb-3 title-rule">
+            <h2 className="font-display text-2xl text-accent mb-3 title-rule">
               Description
             </h2>
-            <p className="text-foreground/85 whitespace-pre-line leading-relaxed">
-              {n.description ?? <span className="text-muted italic">Aucune description.</span>}
-            </p>
+            {n.description ? (
+              <MarkdownContent content={n.description} />
+            ) : (
+              <p className="text-muted italic">Aucune description.</p>
+            )}
           </Card>
 
           <Card>
-            <h2 className="font-serif text-2xl text-accent mb-3 title-rule">
+            <h2 className="font-display text-2xl text-accent mb-3 title-rule">
               Liens ({rels.length})
             </h2>
             {rels.length === 0 ? (
@@ -146,7 +175,7 @@ export default async function NpcDetail({
                         </Link>
                       ) : (
                         <Link
-                          href="/"
+                          href="/wiki/eitan"
                           className="text-foreground hover:underline"
                         >
                           Eitan
