@@ -34,15 +34,6 @@ export function NpcForm({
         <Field label="Nom *">
           <input name="name" required defaultValue={initial?.name ?? ""} />
         </Field>
-        <Field label="Âge">
-          <input
-            type="number"
-            name="age"
-            defaultValue={initial?.age ?? ""}
-            min={0}
-            max={200}
-          />
-        </Field>
         <Field label="Famille">
           <input name="family" defaultValue={initial?.family ?? ""} />
         </Field>

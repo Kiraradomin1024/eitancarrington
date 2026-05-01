@@ -95,7 +95,7 @@ export default async function NpcDetail({
             )}
             <dl className="text-sm space-y-2">
               <Row k="Statut" v={STATUS_LABELS[n.status]} />
-              <Row k="Âge" v={n.age?.toString() ?? "—"} />
+            
               <Row k="Famille" v={n.family ?? "—"} />
               <Row k="Quartier" v={n.neighborhood ?? "—"} />
               <Row k="Occupation" v={n.occupation ?? "—"} />

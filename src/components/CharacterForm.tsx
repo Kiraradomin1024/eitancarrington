@@ -34,15 +34,6 @@ export function CharacterForm({
         <Field label="Nom">
           <input name="name" required defaultValue={initial.name ?? ""} />
         </Field>
-        <Field label="Âge">
-          <input
-            name="age"
-            type="number"
-            min={0}
-            max={200}
-            defaultValue={initial.age ?? ""}
-          />
-        </Field>
         <div className="md:col-span-2">
           <ImageUpload
             name="photo_url"

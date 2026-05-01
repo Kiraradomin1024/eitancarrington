@@ -61,7 +61,7 @@ export default async function EitanWikiPage() {
             )}
             <dl className="text-sm space-y-2">
               <InfoRow k="Nom complet" v={c.name} />
-              <InfoRow k="Âge" v={c.age ? `${c.age} ans` : "—"} />
+            
               <InfoRow k="Statut" v="En vie" />
             </dl>
             {c.traits && c.traits.length > 0 && (
