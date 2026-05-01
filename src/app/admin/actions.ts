@@ -52,5 +52,6 @@ export async function updateCharacter(formData: FormData) {
     .eq("is_main", true);
   if (error) throw new Error(error.message);
   revalidatePath("/");
-  redirect("/");
+  revalidatePath("/wiki/eitan");
+  redirect("/wiki/eitan");
 }
