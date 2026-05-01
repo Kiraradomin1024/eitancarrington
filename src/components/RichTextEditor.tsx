@@ -72,12 +72,13 @@ export function RichTextEditor({
   const editorHeight = `${rows * 1.5 + 2}rem`;
 
   return (
+    <>
     <div className="space-y-1.5">
       {/* Toolbar */}
       <div className="flex items-center gap-2">
         <button
           type="button"
-          onClick={() => fileRef.current?.click()}
+          onClick={(e) => { e.preventDefault(); fileRef.current?.click(); }}
           disabled={uploading}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
                      border border-border bg-surface hover:bg-accent-soft hover:border-accent/40
@@ -91,17 +92,6 @@ export function RichTextEditor({
         <span className="text-xs text-muted italic hidden sm:inline">
           Tu peux coller ou glisser-déposer une image
         </span>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) insertImage(f);
-            e.target.value = "";
-          }}
-        />
       </div>
 
       {/* Hidden input for form submission */}
@@ -163,5 +153,18 @@ export function RichTextEditor({
         <code className="text-accent/80">![](url)</code>
       </p>
     </div>
+      {/* File input placed outside the main container to avoid label click forwarding */}
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) insertImage(f);
+          e.target.value = "";
+        }}
+      />
+    </>
   );
 }

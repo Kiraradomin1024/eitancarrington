@@ -38,7 +38,7 @@ export function extractHeadings(
   const headings: { level: number; text: string; id: string }[] = [];
   const lines = content.split("\n");
   for (const line of lines) {
-    const match = line.match(/^(#{2,4})\s+(.+)$/);
+    const match = line.match(/^(#{1,4})\s+(.+)$/);
     if (match) {
       const level = match[1].length;
       const text = match[2].trim();
@@ -98,11 +98,13 @@ function markdownToHtml(md: string): string {
           const text = headingMatch[2].trim();
           const id = slugify(text);
           const sizeClass =
-            level === 2
-              ? "text-2xl mt-8 mb-3"
-              : level === 3
-                ? "text-xl mt-6 mb-2"
-                : "text-lg mt-4 mb-2";
+            level === 1
+              ? "text-3xl mt-10 mb-4"
+              : level === 2
+                ? "text-2xl mt-8 mb-3"
+                : level === 3
+                  ? "text-xl mt-6 mb-2"
+                  : "text-lg mt-4 mb-2";
           htmlBlocks.push(
             `<h${level} id="${id}" class="font-display ${sizeClass} text-foreground title-rule scroll-mt-24">${inlineMarkdown(escapeHtml(text))}</h${level}>`
           );
@@ -118,11 +120,13 @@ function markdownToHtml(md: string): string {
       const text = headingMatch[2].trim();
       const id = slugify(text);
       const sizeClass =
-        level === 2
-          ? "text-2xl mt-8 mb-3"
-          : level === 3
-            ? "text-xl mt-6 mb-2"
-            : "text-lg mt-4 mb-2";
+        level === 1
+          ? "text-3xl mt-10 mb-4"
+          : level === 2
+            ? "text-2xl mt-8 mb-3"
+            : level === 3
+              ? "text-xl mt-6 mb-2"
+              : "text-lg mt-4 mb-2";
       htmlBlocks.push(
         `<h${level} id="${id}" class="font-display ${sizeClass} text-foreground title-rule scroll-mt-24">${inlineMarkdown(escapeHtml(text))}</h${level}>`
       );
