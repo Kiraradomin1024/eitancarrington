@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { SetupNotice } from "@/components/SetupNotice";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -93,6 +94,7 @@ export default async function RootLayout({
             journal tenu par les proches d&apos;Eitan
           </footer>
         </ThemeProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
