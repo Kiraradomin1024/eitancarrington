@@ -67,8 +67,7 @@ export default async function Home() {
 
         <p className="text-center mt-6 text-muted max-w-xl mx-auto leading-relaxed">
           {c?.age ? `${c.age} ans, ` : "21 ans, "}
-          dernier des Carrington. Né dans la dorure de Richman Lane,
-          mais ailleurs en tête.
+          dernier des Carrington. Né dans la dorure de Richman Lane.
         </p>
 
         <div className="flex justify-center gap-3 mt-8 flex-wrap">
