@@ -72,6 +72,16 @@ export function NpcForm({
             placeholder="ex: famille, Richman Lane, dangereux"
           />
         </Field>
+        <Field
+          label="Streamer (Twitch)"
+          hint="Pseudo Twitch de la personne qui joue ce perso. URL ou @ supportés."
+        >
+          <input
+            name="twitch_username"
+            defaultValue={initial?.twitch_username ?? ""}
+            placeholder="ex: pseudostream"
+          />
+        </Field>
         <div className="md:col-span-2">
           <Field label="Description" hint="Markdown supporté : ## Titres, **gras**, *italique*, images">
             <RichTextEditor

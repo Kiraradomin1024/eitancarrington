@@ -55,8 +55,9 @@ export default function SignupPage() {
           Compte créé
         </h1>
         <p className="text-muted text-sm">
-          Ton compte a été créé avec le pseudo <strong className="text-foreground">{pseudo}</strong>.
-          Un admin devra t&apos;accorder le droit de contribuer.
+          Ton compte a été créé avec le pseudo{" "}
+          <strong className="text-foreground">{pseudo}</strong>. Tu peux
+          maintenant te connecter et contribuer au dossier.
         </p>
         <Link
           href="/login"
@@ -74,8 +75,7 @@ export default function SignupPage() {
         Inscription
       </h1>
       <p className="text-muted text-sm text-center mb-8">
-        Tu pourras consulter le dossier. Pour contribuer, il faudra qu&apos;un
-        admin t&apos;y autorise.
+        Une fois inscrit·e, tu pourras consulter et contribuer au dossier.
       </p>
       <Card>
         <form onSubmit={onSubmit} className="flex flex-col gap-4">

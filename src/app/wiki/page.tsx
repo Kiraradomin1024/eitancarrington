@@ -94,8 +94,24 @@ export default async function WikiPage() {
                   <div className="text-xs text-muted italic">
                     {n.occupation ?? n.family ?? n.neighborhood ?? "—"}
                   </div>
-                  <div className="text-xs text-muted mt-1">
-                    {STATUS_LABELS[n.status]}
+                  <div className="text-xs text-muted mt-1 flex items-center gap-2">
+                    <span>{STATUS_LABELS[n.status]}</span>
+                    {n.twitch_username && (
+                      <span
+                        className="inline-flex items-center gap-1 text-accent"
+                        title={`Joué par ${n.twitch_username} sur Twitch`}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          className="w-3 h-3"
+                          aria-hidden
+                        >
+                          <path d="M4.265 3 3 6.236v12.5h4.471V21h2.5l2.265-2.265h3.529L21 13.736V3H4.265zm15.118 10.029-2.265 2.265h-3.529L11.324 17.56v-2.265H7.794V4.471h11.589v8.558zM16.882 7.471v4.823h-1.588V7.47h1.588zm-3.529 0v4.823h-1.589V7.47h1.589z" />
+                        </svg>
+                        {n.twitch_username}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

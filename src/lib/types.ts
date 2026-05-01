@@ -32,6 +32,7 @@ export type Npc = {
   occupation: string | null;
   status: NpcStatus;
   tags: string[];
+  twitch_username: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
