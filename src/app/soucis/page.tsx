@@ -1,28 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { canContribute, getCurrentUserAndRole } from "@/lib/auth";
 import { Badge, Card, Empty, PageTitle } from "@/components/ui";
-import type { Issue, IssueSeverity, IssueStatus } from "@/lib/types";
-import {
-  ISSUE_SEVERITY_LABELS,
-  ISSUE_STATUS_LABELS,
-} from "@/lib/types";
-import { IssueForm, IssueRowActions } from "./client-parts";
-import { createIssue, deleteIssue, updateIssueStatus } from "./actions";
-
-
-
-const SEVERITY_TONE: Record<IssueSeverity, "neutral" | "accent" | "warn" | "danger"> = {
-  low: "neutral",
-  medium: "accent",
-  high: "warn",
-  critical: "danger",
-};
-
-const STATUS_TONE: Record<IssueStatus, "warn" | "ok" | "neutral"> = {
-  active: "warn",
-  resolved: "ok",
-  paused: "neutral",
-};
+import type { Issue } from "@/lib/types";
+import { IssueForm, EditableIssueCard, IssueRowActions } from "./client-parts";
+import { createIssue, deleteIssue, updateIssue, updateIssueStatus } from "./actions";
 
 export default async function IssuesPage() {
   const supabase = await createClient();
@@ -63,36 +44,14 @@ export default async function IssuesPage() {
       ) : (
         <div className="space-y-3 mb-10">
           {active.map((i) => (
-            <Card key={i.id} className="!p-5">
-              <div className="flex items-start gap-3 flex-wrap">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-serif text-xl text-foreground">
-                      {i.title}
-                    </h3>
-                    <Badge tone={SEVERITY_TONE[i.severity]}>
-                      {ISSUE_SEVERITY_LABELS[i.severity]}
-                    </Badge>
-                    <Badge tone={STATUS_TONE[i.status]}>
-                      {ISSUE_STATUS_LABELS[i.status]}
-                    </Badge>
-                  </div>
-                  {i.description && (
-                    <p className="text-foreground/80 text-sm mt-2 whitespace-pre-line">
-                      {i.description}
-                    </p>
-                  )}
-                </div>
-                {canEdit && (
-                  <IssueRowActions
-                    id={i.id}
-                    status={i.status}
-                    onUpdateStatus={updateIssueStatus}
-                    onDelete={deleteIssue}
-                  />
-                )}
-              </div>
-            </Card>
+            <EditableIssueCard
+              key={i.id}
+              issue={i}
+              canEdit={canEdit}
+              updateAction={updateIssue.bind(null, i.id)}
+              onUpdateStatus={updateIssueStatus}
+              onDelete={deleteIssue}
+            />
           ))}
         </div>
       )}
@@ -104,22 +63,14 @@ export default async function IssuesPage() {
           </h2>
           <div className="space-y-2 opacity-60">
             {resolved.map((i) => (
-              <Card key={i.id} className="!p-3">
-                <div className="flex items-center gap-2">
-                  <span className="line-through text-muted">{i.title}</span>
-                  <Badge tone="ok">résolu</Badge>
-                  {canEdit && (
-                    <div className="ml-auto">
-                      <IssueRowActions
-                        id={i.id}
-                        status={i.status}
-                        onUpdateStatus={updateIssueStatus}
-                        onDelete={deleteIssue}
-                      />
-                    </div>
-                  )}
-                </div>
-              </Card>
+              <EditableIssueCard
+                key={i.id}
+                issue={i}
+                canEdit={canEdit}
+                updateAction={updateIssue.bind(null, i.id)}
+                onUpdateStatus={updateIssueStatus}
+                onDelete={deleteIssue}
+              />
             ))}
           </div>
         </>

@@ -42,3 +42,24 @@ export async function deleteIssue(id: string) {
   if (error) throw new Error(error.message);
   revalidatePath("/soucis");
 }
+
+export async function updateIssue(id: string, formData: FormData) {
+  const supabase = await createClient();
+  if (!supabase) throw new Error("Not configured");
+
+  const payload = {
+    title: String(formData.get("title") ?? "").trim(),
+    description: (formData.get("description") as string) || null,
+    status: (formData.get("status") as string) || "active",
+    severity: (formData.get("severity") as string) || "medium",
+    updated_at: new Date().toISOString(),
+  };
+  if (!payload.title) throw new Error("Titre requis");
+
+  const { error } = await supabase
+    .from("issues")
+    .update(payload)
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/soucis");
+}
