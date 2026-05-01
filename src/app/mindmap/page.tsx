@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { canContribute, getCurrentUserAndRole } from "@/lib/auth";
 import { PageTitle, Empty } from "@/components/ui";
 import type { Npc, Relation, Character } from "@/lib/types";
 import { MindmapClient } from "@/components/MindmapClient";
@@ -8,6 +9,8 @@ import { MindmapClient } from "@/components/MindmapClient";
 export default async function MindmapPage() {
   const supabase = await createClient();
   if (!supabase) return null;
+  const { role } = await getCurrentUserAndRole();
+  const canEdit = canContribute(role);
 
   const [{ data: char }, { data: npcs }, { data: rels }] = await Promise.all([
     supabase
@@ -41,6 +44,7 @@ export default async function MindmapPage() {
           }
           npcs={(npcs ?? []) as Npc[]}
           relations={(rels ?? []) as Relation[]}
+          canEdit={canEdit}
         />
       )}
     </div>

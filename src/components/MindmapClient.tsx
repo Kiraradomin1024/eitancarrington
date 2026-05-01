@@ -41,6 +41,7 @@ type NpcNodeData = {
   occupation: string | null;
   note: string;
   status: string;
+  canEdit: boolean;
 };
 
 const NpcNode = memo(function NpcNode({ data }: { data: NpcNodeData }) {
@@ -102,19 +103,21 @@ const NpcNode = memo(function NpcNode({ data }: { data: NpcNodeData }) {
       <div className="npc-node__info">
         <div className="npc-node__name-row">
           <span className="npc-node__name">{data.name}</span>
-          <button
-            type="button"
-            className="npc-node__edit-btn"
-            title="Ajouter / modifier une note"
-            onClick={(e) => {
-              e.stopPropagation();
-              setEditing(!editing);
-            }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
-              <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
-            </svg>
-          </button>
+          {data.canEdit && (
+            <button
+              type="button"
+              className="npc-node__edit-btn"
+              title="Ajouter / modifier une note"
+              onClick={(e) => {
+                e.stopPropagation();
+                setEditing(!editing);
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
+                <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
+              </svg>
+            </button>
+          )}
         </div>
         {subtitle && <div className="npc-node__subtitle">{subtitle}</div>}
 
@@ -183,10 +186,12 @@ export function MindmapClient({
   mainCharacter,
   npcs,
   relations,
+  canEdit = false,
 }: {
   mainCharacter: Pick<Character, "id" | "name" | "photo_url">;
   npcs: Npc[];
   relations: Relation[];
+  canEdit?: boolean;
 }) {
   const router = useRouter();
 
@@ -221,6 +226,7 @@ export function MindmapClient({
             occupation: npc.occupation,
             note: (npc as Npc & { mindmap_note?: string }).mindmap_note ?? "",
             status: npc.status,
+            canEdit,
           } satisfies NpcNodeData,
         };
       });

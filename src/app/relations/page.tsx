@@ -56,6 +56,7 @@ export default async function RelationsPage() {
                 sourceName={sourceName}
                 targetName={targetName}
                 npcs={npcList}
+                canEdit={canEdit}
                 updateAction={updateRelation.bind(null, r.id)}
                 deleteAction={deleteRelation.bind(null, r.id)}
               />
