@@ -1,14 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { canContribute, getCurrentUserAndRole } from "@/lib/auth";
-import { Badge, Card, Empty, PageTitle } from "@/components/ui";
+import { Empty, PageTitle } from "@/components/ui";
 import type { Npc, Relation } from "@/lib/types";
-import { RELATION_LABELS } from "@/lib/types";
 import { RelationForm } from "@/components/RelationForm";
-import { DeleteButton } from "@/components/DeleteButton";
-import { createRelation, deleteRelation } from "./actions";
-import Link from "next/link";
-
-
+import { EditableRelationRow } from "@/components/EditableRelationRow";
+import { createRelation, deleteRelation, updateRelation } from "./actions";
 
 export default async function RelationsPage() {
   const supabase = await createClient();
@@ -54,57 +50,19 @@ export default async function RelationsPage() {
               : "Eitan";
             const targetName = npcMap.get(r.target_npc_id) ?? "?";
             return (
-              <Card key={r.id} className="!p-4">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <NameLink id={r.source_npc_id} name={sourceName} />
-                  <span className="text-muted">→</span>
-                  <NameLink id={r.target_npc_id} name={targetName} />
-                  <Badge tone="accent">{RELATION_LABELS[r.type]}</Badge>
-                  {r.intensity !== 0 && (
-                    <Badge tone={r.intensity > 0 ? "ok" : "danger"}>
-                      {r.intensity > 0 ? "+" : ""}
-                      {r.intensity}
-                    </Badge>
-                  )}
-                  {r.description && (
-                    <span className="text-muted text-sm italic">
-                      — {r.description}
-                    </span>
-                  )}
-                  {canEdit && (
-                    <div className="ml-auto">
-                      <DeleteButton
-                        action={async () => {
-                          "use server";
-                          await deleteRelation(r.id);
-                        }}
-                        label="×"
-                      />
-                    </div>
-                  )}
-                </div>
-              </Card>
+              <EditableRelationRow
+                key={r.id}
+                relation={r}
+                sourceName={sourceName}
+                targetName={targetName}
+                npcs={npcList}
+                updateAction={updateRelation.bind(null, r.id)}
+                deleteAction={deleteRelation.bind(null, r.id)}
+              />
             );
           })}
         </div>
       )}
     </div>
-  );
-}
-
-function NameLink({ id, name }: { id: string | null; name: string }) {
-  if (!id)
-    return (
-      <Link href="/" className="text-foreground hover:underline font-medium">
-        {name}
-      </Link>
-    );
-  return (
-    <Link
-      href={`/wiki/${id}`}
-      className="text-foreground hover:text-foreground"
-    >
-      {name}
-    </Link>
   );
 }

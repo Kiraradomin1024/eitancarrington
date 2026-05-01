@@ -42,3 +42,32 @@ export async function deleteRelation(id: string) {
   revalidatePath("/relations");
   revalidatePath("/mindmap");
 }
+
+export async function updateRelation(id: string, formData: FormData) {
+  const supabase = await createClient();
+  if (!supabase) throw new Error("Not configured");
+
+  const sourceRaw = formData.get("source_npc_id") as string | null;
+  const target = formData.get("target_npc_id") as string | null;
+  const type = formData.get("type") as string | null;
+  if (!target || !type) throw new Error("Cible et type requis");
+
+  const payload = {
+    source_npc_id: sourceRaw && sourceRaw !== "EITAN" ? sourceRaw : null,
+    target_npc_id: target,
+    type,
+    intensity: formData.get("intensity")
+      ? Number(formData.get("intensity"))
+      : 0,
+    description: (formData.get("description") as string) || null,
+  };
+
+  const { error } = await supabase
+    .from("relations")
+    .update(payload)
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/relations");
+  revalidatePath("/mindmap");
+}
