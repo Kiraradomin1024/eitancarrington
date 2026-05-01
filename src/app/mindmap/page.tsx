@@ -3,7 +3,7 @@ import { PageTitle, Empty } from "@/components/ui";
 import type { Npc, Relation, Character } from "@/lib/types";
 import { MindmapClient } from "@/components/MindmapClient";
 
-export const dynamic = "force-dynamic";
+
 
 export default async function MindmapPage() {
   const supabase = await createClient();

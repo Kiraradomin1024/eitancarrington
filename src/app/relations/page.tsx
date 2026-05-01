@@ -8,7 +8,7 @@ import { DeleteButton } from "@/components/DeleteButton";
 import { createRelation, deleteRelation } from "./actions";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic";
+
 
 export default async function RelationsPage() {
   const supabase = await createClient();

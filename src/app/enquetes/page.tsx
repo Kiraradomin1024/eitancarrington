@@ -10,7 +10,7 @@ import type { Investigation } from "@/lib/types";
 import { INVESTIGATION_STATUS_LABELS } from "@/lib/types";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic";
+
 
 const STATUS_TONE = {
   open: "warn",

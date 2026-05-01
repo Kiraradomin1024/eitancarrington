@@ -6,7 +6,7 @@ import type { Npc } from "@/lib/types";
 import { STATUS_LABELS } from "@/lib/types";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic";
+
 
 export default async function WikiPage() {
   const supabase = await createClient();

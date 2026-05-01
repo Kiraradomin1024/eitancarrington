@@ -9,7 +9,7 @@ import Link from "next/link";
 import { DeleteButton } from "@/components/DeleteButton";
 import { deleteDay } from "../actions";
 
-export const dynamic = "force-dynamic";
+
 
 export default async function DayDetail({
   params,

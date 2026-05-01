@@ -9,7 +9,7 @@ import {
 import { IssueForm, IssueRowActions } from "./client-parts";
 import { createIssue, deleteIssue, updateIssueStatus } from "./actions";
 
-export const dynamic = "force-dynamic";
+
 
 const SEVERITY_TONE: Record<IssueSeverity, "neutral" | "accent" | "warn" | "danger"> = {
   low: "neutral",

@@ -20,7 +20,7 @@ import {
 } from "../actions";
 import { ClueForm, NpcLinker } from "./client-parts";
 
-export const dynamic = "force-dynamic";
+
 
 const STATUS_TONE = {
   open: "warn",

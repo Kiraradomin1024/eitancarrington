@@ -5,7 +5,7 @@ import type { Day } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic";
+
 
 export default async function JournalPage() {
   const supabase = await createClient();

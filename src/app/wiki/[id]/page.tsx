@@ -9,7 +9,7 @@ import { notFound } from "next/navigation";
 import { DeleteButton } from "@/components/DeleteButton";
 import { deleteNpc } from "../actions";
 
-export const dynamic = "force-dynamic";
+
 
 export default async function NpcDetail({
   params,
