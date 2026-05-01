@@ -123,13 +123,13 @@ export function Field({
   hint?: string;
 }) {
   return (
-    <label className="block">
+    <div className="block">
       <span className="text-xs uppercase tracking-wider text-muted mb-1.5 block font-medium">
         {label}
       </span>
       {children}
       {hint && <span className="text-xs text-muted mt-1 block">{hint}</span>}
-    </label>
+    </div>
   );
 }
 

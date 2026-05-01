@@ -113,53 +113,60 @@ function markdownToHtml(md: string): string {
       continue;
     }
 
-    // Check if first line is a heading
-    const headingMatch = lines[0].trim().match(/^(#{1,6})\s+(.+)$/);
-    if (headingMatch && lines.length === 1) {
-      const level = headingMatch[1].length;
-      const text = headingMatch[2].trim();
-      const id = slugify(text);
-      const sizeClass =
-        level === 1
-          ? "text-3xl mt-10 mb-4"
-          : level === 2
-            ? "text-2xl mt-8 mb-3"
-            : level === 3
-              ? "text-xl mt-6 mb-2"
-              : "text-lg mt-4 mb-2";
-      htmlBlocks.push(
-        `<h${level} id="${id}" class="font-display ${sizeClass} text-foreground title-rule scroll-mt-24">${inlineMarkdown(escapeHtml(text))}</h${level}>`
-      );
-      continue;
+    // Process lines individually: headings become h tags, rest becomes paragraphs
+    let paragraphLines: string[] = [];
+
+    function flushParagraph() {
+      if (paragraphLines.length > 0) {
+        htmlBlocks.push(
+          `<p class="leading-relaxed text-foreground/85 mb-4">${paragraphLines.join("<br/>")}</p>`
+        );
+        paragraphLines = [];
+      }
     }
 
-    // Image-only block
-    const imgMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
-    if (imgMatch) {
-      const alt = escapeHtml(imgMatch[1]);
-      const src = escapeHtml(imgMatch[2]);
-      htmlBlocks.push(
-        `<figure class="my-6"><img src="${src}" alt="${alt}" class="rounded-xl border border-border shadow-sm max-w-full mx-auto" loading="lazy" />${alt ? `<figcaption class="text-center text-xs text-muted mt-2 font-hand">${alt}</figcaption>` : ""}</figure>`
-      );
-      continue;
-    }
-
-    // Regular paragraph — process inline markdown on each line
-    const processedLines = lines.map((line) => {
+    for (const line of lines) {
       const l = line.trim();
-      // Inline image within a paragraph
+      if (!l) continue;
+
+      // Heading line
+      const hMatch = l.match(/^(#{1,6})\s+(.+)$/);
+      if (hMatch) {
+        flushParagraph();
+        const level = hMatch[1].length;
+        const text = hMatch[2].trim();
+        const id = slugify(text);
+        const sizeClass =
+          level === 1
+            ? "text-3xl mt-10 mb-4"
+            : level === 2
+              ? "text-2xl mt-8 mb-3"
+              : level === 3
+                ? "text-xl mt-6 mb-2"
+                : "text-lg mt-4 mb-2";
+        htmlBlocks.push(
+          `<h${level} id="${id}" class="font-display ${sizeClass} text-foreground title-rule scroll-mt-24">${inlineMarkdown(escapeHtml(text))}</h${level}>`
+        );
+        continue;
+      }
+
+      // Image-only line
       const inlineImgMatch = l.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
       if (inlineImgMatch) {
+        flushParagraph();
         const alt = escapeHtml(inlineImgMatch[1]);
         const src = escapeHtml(inlineImgMatch[2]);
-        return `</p><figure class="my-6"><img src="${src}" alt="${alt}" class="rounded-xl border border-border shadow-sm max-w-full mx-auto" loading="lazy" />${alt ? `<figcaption class="text-center text-xs text-muted mt-2 font-hand">${alt}</figcaption>` : ""}</figure><p class="leading-relaxed text-foreground/85 mb-4">`;
+        htmlBlocks.push(
+          `<figure class="my-6"><img src="${src}" alt="${alt}" class="rounded-xl border border-border shadow-sm max-w-full mx-auto" loading="lazy" />${alt ? `<figcaption class="text-center text-xs text-muted mt-2 font-hand">${alt}</figcaption>` : ""}</figure>`
+        );
+        continue;
       }
-      return inlineMarkdown(escapeHtml(l));
-    });
 
-    htmlBlocks.push(
-      `<p class="leading-relaxed text-foreground/85 mb-4">${processedLines.join("<br/>")}</p>`
-    );
+      // Regular text line
+      paragraphLines.push(inlineMarkdown(escapeHtml(l)));
+    }
+
+    flushParagraph();
   }
 
   return htmlBlocks.join("\n");
