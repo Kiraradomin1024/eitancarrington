@@ -20,6 +20,13 @@ export default async function WikiPage() {
     .order("name", { ascending: true });
   const npcs = (data ?? []) as Npc[];
 
+  const { data: charData } = await supabase
+    .from("character")
+    .select("photo_url")
+    .eq("is_main", true)
+    .maybeSingle();
+  const eitanPhoto = (charData as { photo_url: string | null } | null)?.photo_url;
+
   return (
     <div>
       <PageTitle
@@ -35,9 +42,18 @@ export default async function WikiPage() {
         href="/wiki/eitan"
         className="card card-glow p-5 mb-6 flex gap-4 items-center hover:border-accent/60 transition-colors block"
       >
-        <span className="w-14 h-14 rounded-full bg-gradient-to-br from-accent via-accent-2 to-accent-3 flex items-center justify-center text-white font-display text-2xl shadow-md shrink-0">
-          E
-        </span>
+        {eitanPhoto ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={eitanPhoto}
+            alt="Eitan Carrington"
+            className="w-14 h-14 rounded-full object-cover border-2 border-accent/30 shadow-md shrink-0"
+          />
+        ) : (
+          <span className="w-14 h-14 rounded-full bg-gradient-to-br from-accent via-accent-2 to-accent-3 flex items-center justify-center text-white font-display text-2xl shadow-md shrink-0">
+            E
+          </span>
+        )}
         <div>
           <div className="font-display text-xl text-foreground">
             Eitan Carrington

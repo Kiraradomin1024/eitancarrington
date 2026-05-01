@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback, memo } from "react";
+import { useMemo, useCallback, memo, useState, useRef, useEffect } from "react";
 import {
   ReactFlow,
   Background,
@@ -17,6 +17,7 @@ import "reactflow/dist/style.css";
 import type { Character, Npc, Relation } from "@/lib/types";
 import { RELATION_LABELS } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 /* ── Relation edge colors ── */
 const TYPE_COLOR: Record<string, string> = {
@@ -33,20 +34,54 @@ const TYPE_COLOR: Record<string, string> = {
 
 /* ── NPC Card Node ── */
 type NpcNodeData = {
+  id: string;
   name: string;
   photoUrl: string | null;
   family: string | null;
   occupation: string | null;
-  description: string | null;
+  note: string;
   status: string;
 };
 
 const NpcNode = memo(function NpcNode({ data }: { data: NpcNodeData }) {
   const subtitle = data.family || data.occupation || null;
-  const note =
-    data.description && data.description.length > 80
-      ? data.description.slice(0, 80) + "…"
-      : data.description;
+  const [editing, setEditing] = useState(false);
+  const [note, setNote] = useState(data.note || "");
+  const [saving, setSaving] = useState(false);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editing]);
+
+  async function saveNote() {
+    setSaving(true);
+    try {
+      const supabase = createClient();
+      await supabase
+        .from("npcs")
+        .update({ mindmap_note: note || null })
+        .eq("id", data.id);
+    } catch {
+      // silent fail
+    }
+    setSaving(false);
+    setEditing(false);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      saveNote();
+    }
+    if (e.key === "Escape") {
+      setNote(data.note || "");
+      setEditing(false);
+    }
+  }
 
   return (
     <div className="npc-node">
@@ -64,9 +99,50 @@ const NpcNode = memo(function NpcNode({ data }: { data: NpcNodeData }) {
       </div>
 
       {/* Info */}
-      <div className="npc-node__name">{data.name}</div>
-      {subtitle && <div className="npc-node__subtitle">{subtitle}</div>}
-      {note && <div className="npc-node__note">{note}</div>}
+      <div className="npc-node__info">
+        <div className="npc-node__name-row">
+          <span className="npc-node__name">{data.name}</span>
+          <button
+            type="button"
+            className="npc-node__edit-btn"
+            title="Ajouter / modifier une note"
+            onClick={(e) => {
+              e.stopPropagation();
+              setEditing(!editing);
+            }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
+              <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
+            </svg>
+          </button>
+        </div>
+        {subtitle && <div className="npc-node__subtitle">{subtitle}</div>}
+
+        {/* Note display or edit */}
+        {editing ? (
+          <div className="npc-node__note-edit" onClick={(e) => e.stopPropagation()}>
+            <textarea
+              ref={inputRef}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              onKeyDown={handleKeyDown}
+              rows={2}
+              placeholder="Ajouter une note…"
+              className="npc-node__note-input"
+            />
+            <div className="npc-node__note-actions">
+              <button type="button" onClick={saveNote} disabled={saving} className="npc-node__note-save">
+                {saving ? "…" : "✓"}
+              </button>
+              <button type="button" onClick={() => { setNote(data.note || ""); setEditing(false); }} className="npc-node__note-cancel">
+                ✕
+              </button>
+            </div>
+          </div>
+        ) : (
+          note && <div className="npc-node__note">{note}</div>
+        )}
+      </div>
     </div>
   );
 });
@@ -126,7 +202,6 @@ export function MindmapClient({
     const inner = npcs.filter((n) => directlyLinked.has(n.id));
     const outer = npcs.filter((n) => !directlyLinked.has(n.id));
 
-    // Wider spacing for card nodes
     function ring(items: Npc[], radius: number, offset = 0): Node[] {
       const count = items.length || 1;
       return items.map((npc, i) => {
@@ -139,11 +214,12 @@ export function MindmapClient({
             y: cy + Math.sin(a) * radius,
           },
           data: {
+            id: npc.id,
             name: npc.name,
             photoUrl: npc.photo_url,
             family: npc.family,
             occupation: npc.occupation,
-            description: npc.description,
+            note: (npc as Npc & { mindmap_note?: string }).mindmap_note ?? "",
             status: npc.status,
           } satisfies NpcNodeData,
         };

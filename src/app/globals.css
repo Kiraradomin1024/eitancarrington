@@ -345,26 +345,103 @@ main, header, footer { position: relative; z-index: 1; }
   opacity: 0.6;
 }
 
+.npc-node__info {
+  padding: 8px 10px 10px;
+}
+
+.npc-node__name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
 .npc-node__name {
   font-family: var(--font-fraunces), Georgia, serif;
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--foreground);
-  padding: 8px 10px 2px;
   line-height: 1.2;
+  flex: 1;
+  min-width: 0;
 }
+.npc-node__edit-btn {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.npc-node__edit-btn:hover {
+  color: var(--accent);
+  background: var(--accent-soft, rgba(124,93,250,0.1));
+}
+
 .npc-node__subtitle {
   font-family: var(--font-caveat), cursive;
   font-size: 0.85rem;
   color: var(--accent);
-  padding: 0 10px;
   line-height: 1.3;
+  margin-top: 1px;
 }
 .npc-node__note {
   font-size: 0.7rem;
   color: var(--muted);
-  padding: 6px 10px 10px;
+  margin-top: 6px;
   line-height: 1.4;
+  font-style: italic;
+}
+
+/* Note editor */
+.npc-node__note-edit {
+  margin-top: 6px;
+}
+.npc-node__note-input {
+  width: 100%;
+  font-size: 0.7rem;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--foreground);
+  resize: none;
+  font-family: inherit;
+  line-height: 1.4;
+}
+.npc-node__note-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.npc-node__note-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  justify-content: flex-end;
+}
+.npc-node__note-save,
+.npc-node__note-cancel {
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.npc-node__note-save:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.npc-node__note-cancel:hover {
+  background: var(--surface-2);
 }
 
 /* Main character node (Eitan) */
