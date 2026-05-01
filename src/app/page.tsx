@@ -47,7 +47,7 @@ export default async function Home() {
         </div>
 
         <p className="font-hand text-2xl text-accent text-center mb-4">
-          journal personnel — ouvert à mes proches
+          journal personnel
         </p>
 
         {c?.photo_url && (
