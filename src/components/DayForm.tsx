@@ -9,11 +9,13 @@ export function DayForm({
   initialNpcIds,
   npcs,
   action,
+  nextDayNumber,
 }: {
   initial?: Partial<Day>;
   initialNpcIds?: string[];
   npcs: Pick<Npc, "id" | "name">[];
   action: (formData: FormData) => Promise<void>;
+  nextDayNumber?: number;
 }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +51,15 @@ export function DayForm({
             defaultValue={
               initial?.date ?? new Date().toISOString().slice(0, 10)
             }
+          />
+        </Field>
+        <Field label="Jour N°" hint="ex: 1, 2, 3… (le numéro du jour RP)">
+          <input
+            type="number"
+            name="day_number"
+            min={1}
+            defaultValue={initial?.day_number ?? nextDayNumber ?? ""}
+            placeholder="ex: 5"
           />
         </Field>
         <Field label="Titre *">

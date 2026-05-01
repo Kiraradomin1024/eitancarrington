@@ -62,6 +62,7 @@ export type Relation = {
 export type Day = {
   id: string;
   date: string;
+  day_number: number | null;
   title: string;
   summary: string | null;
   content: string | null;

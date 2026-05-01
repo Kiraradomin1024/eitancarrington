@@ -40,22 +40,35 @@ export default async function JournalPage() {
               className="card p-5 hover:border-accent/60 transition-colors flex gap-6 items-start block"
             >
               <div className="text-center font-serif text-foreground shrink-0 w-24">
-                <div className="text-3xl leading-none">
-                  {new Date(d.date).getDate()}
-                </div>
-                <div className="text-xs text-muted uppercase tracking-wider mt-1">
-                  {new Date(d.date).toLocaleDateString("fr-FR", {
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </div>
+                {d.day_number ? (
+                  <>
+                    <div className="text-3xl leading-none text-gradient">
+                      {d.day_number}
+                    </div>
+                    <div className="text-xs text-muted uppercase tracking-wider mt-1">
+                      Jour
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-3xl leading-none">
+                      {new Date(d.date).getDate()}
+                    </div>
+                    <div className="text-xs text-muted uppercase tracking-wider mt-1">
+                      {new Date(d.date).toLocaleDateString("fr-FR", {
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </div>
+                  </>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-serif text-2xl text-foreground">
                   {d.title}
                 </div>
                 <div className="text-xs text-muted mt-0.5">
-                  {formatDate(d.date)}
+                  {d.day_number ? `Jour ${d.day_number} · ` : ""}{formatDate(d.date)}
                 </div>
                 {d.summary && (
                   <p className="text-foreground/80 mt-2 text-sm">

@@ -41,8 +41,8 @@ export default async function DayDetail({
   return (
     <div>
       <PageTitle
-        title={day.title}
-        subtitle={formatDate(day.date)}
+        title={day.day_number ? `Jour ${day.day_number} — ${day.title}` : day.title}
+        subtitle={day.day_number ? `Jour ${day.day_number} · ${formatDate(day.date)}` : formatDate(day.date)}
         action={
           canEdit && (
             <div className="flex gap-2">

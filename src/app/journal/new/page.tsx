@@ -10,14 +10,25 @@ export default async function NewDayPage() {
   if (!canContribute(role)) redirect("/journal");
   const supabase = await createClient();
   if (!supabase) return null;
-  const { data } = await supabase
-    .from("npcs")
-    .select("id, name")
-    .order("name");
+  const [{ data: npcs }, { data: maxRow }] = await Promise.all([
+    supabase.from("npcs").select("id, name").order("name"),
+    supabase
+      .from("days")
+      .select("day_number")
+      .not("day_number", "is", null)
+      .order("day_number", { ascending: false })
+      .limit(1),
+  ]);
+  const maxDayNumber = (maxRow?.[0] as { day_number: number } | undefined)?.day_number ?? 0;
+
   return (
     <div>
       <PageTitle title="Nouvelle entrée du journal" />
-      <DayForm npcs={data ?? []} action={createDay} />
+      <DayForm
+        npcs={npcs ?? []}
+        action={createDay}
+        nextDayNumber={maxDayNumber + 1}
+      />
     </div>
   );
 }

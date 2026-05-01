@@ -14,8 +14,12 @@ export async function createDay(formData: FormData) {
 
   const npcIds = formData.getAll("npc_ids").map(String).filter(Boolean);
 
+  const rawDayNumber = formData.get("day_number");
+  const dayNumber = rawDayNumber ? parseInt(String(rawDayNumber), 10) : null;
+
   const payload = {
     date: String(formData.get("date") ?? ""),
+    day_number: dayNumber && !isNaN(dayNumber) ? dayNumber : null,
     title: String(formData.get("title") ?? "").trim(),
     summary: (formData.get("summary") as string) || null,
     content: (formData.get("content") as string) || null,
@@ -46,8 +50,12 @@ export async function updateDay(id: string, formData: FormData) {
   if (!supabase) throw new Error("Not configured");
   const npcIds = formData.getAll("npc_ids").map(String).filter(Boolean);
 
+  const rawDayNumber = formData.get("day_number");
+  const dayNumber = rawDayNumber ? parseInt(String(rawDayNumber), 10) : null;
+
   const payload = {
     date: String(formData.get("date") ?? ""),
+    day_number: dayNumber && !isNaN(dayNumber) ? dayNumber : null,
     title: String(formData.get("title") ?? "").trim(),
     summary: (formData.get("summary") as string) || null,
     content: (formData.get("content") as string) || null,

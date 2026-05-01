@@ -15,14 +15,20 @@ export default async function Home() {
 
   const c = data as Character | null;
 
-  const [{ count: npcCount }, { count: dayCount }, { count: invCount }] =
+  const [{ count: npcCount }, { data: maxDayRow }, { count: invCount }] =
     await Promise.all([
       supabase.from("npcs").select("*", { count: "exact", head: true }),
-      supabase.from("days").select("*", { count: "exact", head: true }),
+      supabase
+        .from("days")
+        .select("day_number")
+        .not("day_number", "is", null)
+        .order("day_number", { ascending: false })
+        .limit(1),
       supabase
         .from("investigations")
         .select("*", { count: "exact", head: true }),
     ]);
+  const latestDay = (maxDayRow?.[0] as { day_number: number } | undefined)?.day_number ?? 0;
 
   const {
     data: { user },
@@ -135,9 +141,9 @@ export default async function Home() {
         />
         <StatCard
           href="/journal"
-          label="Jours documentés"
-          value={dayCount ?? 0}
-          tagline="passés à Los Santos"
+          label="Dernier jour"
+          value={latestDay}
+          tagline="à Los Santos"
         />
         <StatCard
           href="/enquetes"
