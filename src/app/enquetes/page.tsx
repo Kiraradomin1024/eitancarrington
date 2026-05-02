@@ -51,7 +51,7 @@ export default async function InvestigationsPage() {
           {items.map((i) => (
             <Link
               key={i.id}
-              href={`/enquetes/${i.id}`}
+              href={`/enquetes/${i.slug ?? i.id}`}
               className="card p-5 hover:border-accent/60 transition-colors block"
             >
               <div className="flex items-start justify-between gap-3">

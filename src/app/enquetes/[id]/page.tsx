@@ -19,6 +19,7 @@ import {
   unlinkNpc,
 } from "../actions";
 import { ClueForm, NpcLinker } from "./client-parts";
+import { slugOrIdColumn } from "@/lib/slug";
 
 
 
@@ -61,40 +62,41 @@ export default async function InvDetail({
   const canAdd = canContribute(role);
   const canEdit = isAdmin(role);
 
-  const [{ data: inv }, { data: clues }, { data: linkedRaw }, { data: npcs }] =
+  const { data: inv } = await supabase
+    .from("investigations")
+    .select("*")
+    .eq(slugOrIdColumn(id), id)
+    .maybeSingle();
+  if (!inv) notFound();
+  const i = inv as Investigation;
+  const invKey = i.slug ?? i.id;
+
+  const [{ data: clues }, { data: linkedRaw }, { data: npcs }] =
     await Promise.all([
-      supabase
-        .from("investigations")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle(),
       supabase
         .from("investigation_clues")
         .select("*")
-        .eq("investigation_id", id)
+        .eq("investigation_id", i.id)
         .order("found_at", { ascending: false }),
       supabase
         .from("investigation_npcs")
-        .select("npc_id, role, npcs(id, name)")
-        .eq("investigation_id", id),
+        .select("npc_id, role, npcs(id, name, slug)")
+        .eq("investigation_id", i.id),
       supabase.from("npcs").select("id, name").order("name"),
     ]);
-
-  if (!inv) notFound();
-  const i = inv as Investigation;
   const clueList = (clues ?? []) as Clue[];
   const linked =
     (linkedRaw as
       | {
           npc_id: string;
           role: string;
-          npcs: { id: string; name: string } | null;
+          npcs: { id: string; name: string; slug: string | null } | null;
         }[]
       | null) ?? [];
   const npcList = (npcs ?? []) as Pick<Npc, "id" | "name">[];
 
-  const addClueBound = addClue.bind(null, id);
-  const linkNpcBound = linkNpc.bind(null, id);
+  const addClueBound = addClue.bind(null, i.id);
+  const linkNpcBound = linkNpc.bind(null, i.id);
 
   return (
     <div>
@@ -108,7 +110,7 @@ export default async function InvDetail({
             {canEdit && (
               <>
                 <LinkButton
-                  href={`/enquetes/${id}/edit`}
+                  href={`/enquetes/${invKey}/edit`}
                   variant="ghost"
                 >
                   Modifier
@@ -116,7 +118,7 @@ export default async function InvDetail({
                 <DeleteButton
                   action={async () => {
                     "use server";
-                    await deleteInvestigation(id);
+                    await deleteInvestigation(i.id);
                   }}
                 />
               </>
@@ -176,7 +178,7 @@ export default async function InvDetail({
                       <DeleteButton
                         action={async () => {
                           "use server";
-                          await deleteClue(c.id, id);
+                          await deleteClue(c.id, i.id);
                         }}
                         label="×"
                       />
@@ -208,7 +210,7 @@ export default async function InvDetail({
                         {ROLE_LABELS[l.role] ?? l.role}
                       </Badge>
                       <Link
-                        href={`/wiki/${l.npc_id}`}
+                        href={`/wiki/${l.npcs!.slug ?? l.npc_id}`}
                         className="text-foreground hover:text-foreground flex-1"
                       >
                         {l.npcs!.name}
@@ -217,7 +219,7 @@ export default async function InvDetail({
                         <DeleteButton
                           action={async () => {
                             "use server";
-                            await unlinkNpc(id, l.npc_id);
+                            await unlinkNpc(i.id, l.npc_id);
                           }}
                           label="×"
                         />

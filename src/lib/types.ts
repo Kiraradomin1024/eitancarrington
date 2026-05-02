@@ -24,6 +24,7 @@ export type Character = {
 export type NpcStatus = "alive" | "dead" | "missing" | "unknown";
 export type Npc = {
   id: string;
+  slug: string | null;
   name: string;
   photo_url: string | null;
   description: string | null;
@@ -63,6 +64,7 @@ export type Relation = {
 
 export type Day = {
   id: string;
+  slug: string | null;
   date: string;
   day_number: number | null;
   title: string;
@@ -76,6 +78,7 @@ export type Day = {
 export type InvestigationStatus = "open" | "in_progress" | "closed" | "cold";
 export type Investigation = {
   id: string;
+  slug: string | null;
   title: string;
   status: InvestigationStatus;
   description: string | null;

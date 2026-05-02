@@ -6,6 +6,7 @@ import type { Npc, Relation } from "@/lib/types";
 import { RELATION_LABELS, STATUS_LABELS } from "@/lib/types";
 import { getLiveStatuses } from "@/lib/twitch";
 import { TwitchLiveDot } from "@/components/TwitchLiveDot";
+import { slugOrIdColumn } from "@/lib/slug";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DeleteButton } from "@/components/DeleteButton";
@@ -27,30 +28,36 @@ export default async function NpcDetail({
   const { data: npc } = await supabase
     .from("npcs")
     .select("*")
-    .eq("id", id)
+    .eq(slugOrIdColumn(id), id)
     .maybeSingle();
 
   if (!npc) notFound();
   const n = npc as Npc;
 
+  // Relations always join via the row's UUID
   const { data: relsRaw } = await supabase
     .from("relations")
     .select("*")
-    .or(`source_npc_id.eq.${id},target_npc_id.eq.${id}`);
+    .or(`source_npc_id.eq.${n.id},target_npc_id.eq.${n.id}`);
   const rels = (relsRaw ?? []) as Relation[];
 
   const otherIds = Array.from(
     new Set(
       rels
         .flatMap((r) => [r.source_npc_id, r.target_npc_id])
-        .filter((x): x is string => !!x && x !== id)
+        .filter((x): x is string => !!x && x !== n.id)
     )
   );
   const { data: othersRaw } = otherIds.length
-    ? await supabase.from("npcs").select("id, name").in("id", otherIds)
+    ? await supabase.from("npcs").select("id, name, slug").in("id", otherIds)
     : { data: [] };
   const otherMap = new Map(
-    (othersRaw ?? []).map((o: { id: string; name: string }) => [o.id, o.name])
+    (othersRaw ?? []).map(
+      (o: { id: string; name: string; slug: string | null }) => [
+        o.id,
+        { name: o.name, slug: o.slug },
+      ]
+    )
   );
 
   // Extract table of contents from description
@@ -72,13 +79,16 @@ export default async function NpcDetail({
         action={
           canEdit && (
             <div className="flex gap-2">
-              <LinkButton href={`/wiki/${id}/edit`} variant="ghost">
+              <LinkButton
+                href={`/wiki/${n.slug ?? n.id}/edit`}
+                variant="ghost"
+              >
                 Modifier
               </LinkButton>
               <DeleteButton
                 action={async () => {
                   "use server";
-                  await deleteNpc(id);
+                  await deleteNpc(n.id);
                 }}
                 label="Supprimer"
               />
@@ -199,20 +209,22 @@ export default async function NpcDetail({
             ) : (
               <ul className="space-y-2">
                 {rels.map((r) => {
-                  const isSource = r.source_npc_id === id;
+                  const isSource = r.source_npc_id === n.id;
                   const otherId = isSource ? r.target_npc_id : r.source_npc_id;
-                  const otherName = otherId
-                    ? otherMap.get(otherId) ?? "Inconnu"
-                    : "Eitan Carrington";
+                  const otherInfo = otherId ? otherMap.get(otherId) : null;
+                  const otherName = otherInfo?.name ?? "Inconnu";
+                  const otherHref = otherInfo
+                    ? `/wiki/${otherInfo.slug ?? otherId}`
+                    : null;
                   return (
                     <li
                       key={r.id}
                       className="flex items-center gap-3 p-2 rounded hover:bg-surface-2"
                     >
                       <Badge tone="accent">{RELATION_LABELS[r.type]}</Badge>
-                      {otherId ? (
+                      {otherHref ? (
                         <Link
-                          href={`/wiki/${otherId}`}
+                          href={otherHref}
                           className="text-foreground hover:text-foreground"
                         >
                           {otherName}

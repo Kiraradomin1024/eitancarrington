@@ -1,8 +1,19 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { uniqueSlug } from "@/lib/slug";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+
+function buildDaySlugBase(
+  dayNumber: number | null,
+  title: string,
+  date: string
+): string {
+  if (dayNumber !== null) return `jour-${dayNumber}`;
+  if (title) return title;
+  return date;
+}
 
 export async function createDay(formData: FormData) {
   const supabase = await createClient();
@@ -28,10 +39,17 @@ export async function createDay(formData: FormData) {
   if (!payload.date || !payload.title)
     throw new Error("Date et titre requis");
 
+  const slug = await uniqueSlug(
+    supabase,
+    "days",
+    buildDaySlugBase(payload.day_number, payload.title, payload.date),
+    "jour"
+  );
+
   const { data, error } = await supabase
     .from("days")
-    .insert(payload)
-    .select("id")
+    .insert({ ...payload, slug })
+    .select("id, slug")
     .single();
   if (error) throw new Error(error.message);
 
@@ -42,7 +60,7 @@ export async function createDay(formData: FormData) {
   }
 
   revalidatePath("/journal");
-  redirect(`/journal/${data.id}`);
+  redirect(`/journal/${data.slug ?? data.id}`);
 }
 
 export async function updateDay(id: string, formData: FormData) {
@@ -61,7 +79,33 @@ export async function updateDay(id: string, formData: FormData) {
     content: (formData.get("content") as string) || null,
     updated_at: new Date().toISOString(),
   };
-  const { error } = await supabase.from("days").update(payload).eq("id", id);
+  // If title or day_number changed, regenerate the slug
+  const { data: current } = await supabase
+    .from("days")
+    .select("title, day_number, slug")
+    .eq("id", id)
+    .maybeSingle();
+  const finalPayload: typeof payload & { slug?: string } = { ...payload };
+  if (
+    !current?.slug ||
+    current.title !== payload.title ||
+    current.day_number !== payload.day_number
+  ) {
+    finalPayload.slug = await uniqueSlug(
+      supabase,
+      "days",
+      buildDaySlugBase(payload.day_number, payload.title, payload.date),
+      "jour",
+      id
+    );
+  }
+
+  const { data, error } = await supabase
+    .from("days")
+    .update(finalPayload)
+    .eq("id", id)
+    .select("slug")
+    .single();
   if (error) throw new Error(error.message);
 
   await supabase.from("day_npcs").delete().eq("day_id", id);
@@ -71,9 +115,10 @@ export async function updateDay(id: string, formData: FormData) {
       .insert(npcIds.map((npc_id) => ({ day_id: id, npc_id })));
   }
 
+  const target = data.slug ?? id;
   revalidatePath("/journal");
-  revalidatePath(`/journal/${id}`);
-  redirect(`/journal/${id}`);
+  revalidatePath(`/journal/${target}`);
+  redirect(`/journal/${target}`);
 }
 
 export async function deleteDay(id: string) {

@@ -35,6 +35,7 @@ const TYPE_COLOR: Record<string, string> = {
 /* ── NPC Card Node ── */
 type NpcNodeData = {
   id: string;
+  slug: string | null;
   name: string;
   photoUrl: string | null;
   family: string | null;

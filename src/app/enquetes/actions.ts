@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { uniqueSlug } from "@/lib/slug";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -20,15 +21,22 @@ export async function createInvestigation(formData: FormData) {
   };
   if (!payload.title) throw new Error("Titre requis");
 
+  const slug = await uniqueSlug(
+    supabase,
+    "investigations",
+    payload.title,
+    "enquete"
+  );
+
   const { data, error } = await supabase
     .from("investigations")
-    .insert(payload)
-    .select("id")
+    .insert({ ...payload, slug })
+    .select("id, slug")
     .single();
   if (error) throw new Error(error.message);
 
   revalidatePath("/enquetes");
-  redirect(`/enquetes/${data.id}`);
+  redirect(`/enquetes/${data.slug ?? data.id}`);
 }
 
 export async function updateInvestigation(id: string, formData: FormData) {
@@ -40,14 +48,35 @@ export async function updateInvestigation(id: string, formData: FormData) {
     status: (formData.get("status") as string) || "open",
     updated_at: new Date().toISOString(),
   };
-  const { error } = await supabase
+
+  // If title changed, regenerate the slug
+  const { data: current } = await supabase
     .from("investigations")
-    .update(payload)
-    .eq("id", id);
+    .select("title, slug")
+    .eq("id", id)
+    .maybeSingle();
+  const finalPayload: typeof payload & { slug?: string } = { ...payload };
+  if (!current?.slug || current.title !== payload.title) {
+    finalPayload.slug = await uniqueSlug(
+      supabase,
+      "investigations",
+      payload.title,
+      "enquete",
+      id
+    );
+  }
+
+  const { data, error } = await supabase
+    .from("investigations")
+    .update(finalPayload)
+    .eq("id", id)
+    .select("slug")
+    .single();
   if (error) throw new Error(error.message);
+  const target = data.slug ?? id;
   revalidatePath("/enquetes");
-  revalidatePath(`/enquetes/${id}`);
-  redirect(`/enquetes/${id}`);
+  revalidatePath(`/enquetes/${target}`);
+  redirect(`/enquetes/${target}`);
 }
 
 export async function deleteInvestigation(id: string) {

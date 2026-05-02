@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { uniqueSlug } from "@/lib/slug";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -52,15 +53,17 @@ export async function createNpc(formData: FormData) {
 
   if (!payload.name) throw new Error("Nom requis");
 
+  const slug = await uniqueSlug(supabase, "npcs", payload.name, "perso");
+
   const { data, error } = await supabase
     .from("npcs")
-    .insert(payload)
-    .select("id")
+    .insert({ ...payload, slug })
+    .select("id, slug")
     .single();
   if (error) throw new Error(error.message);
 
   revalidatePath("/wiki");
-  redirect(`/wiki/${data.id}`);
+  redirect(`/wiki/${data.slug ?? data.id}`);
 }
 
 export async function updateNpc(id: string, formData: FormData) {
@@ -82,12 +85,35 @@ export async function updateNpc(id: string, formData: FormData) {
   };
   if (!payload.name) throw new Error("Nom requis");
 
-  const { error } = await supabase.from("npcs").update(payload).eq("id", id);
+  // If the name changed, regenerate the slug
+  const { data: current } = await supabase
+    .from("npcs")
+    .select("name, slug")
+    .eq("id", id)
+    .maybeSingle();
+  const finalPayload: typeof payload & { slug?: string } = { ...payload };
+  if (!current?.slug || current.name !== payload.name) {
+    finalPayload.slug = await uniqueSlug(
+      supabase,
+      "npcs",
+      payload.name,
+      "perso",
+      id
+    );
+  }
+
+  const { data, error } = await supabase
+    .from("npcs")
+    .update(finalPayload)
+    .eq("id", id)
+    .select("slug")
+    .single();
   if (error) throw new Error(error.message);
 
+  const target = data.slug ?? id;
   revalidatePath("/wiki");
-  revalidatePath(`/wiki/${id}`);
-  redirect(`/wiki/${id}`);
+  revalidatePath(`/wiki/${target}`);
+  redirect(`/wiki/${target}`);
 }
 
 export async function deleteNpc(id: string) {

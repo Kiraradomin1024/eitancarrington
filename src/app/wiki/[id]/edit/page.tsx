@@ -3,6 +3,7 @@ import { getCurrentUserAndRole, isAdmin } from "@/lib/auth";
 import { NpcForm } from "@/components/NpcForm";
 import { PageTitle } from "@/components/ui";
 import { updateNpc } from "../../actions";
+import { slugOrIdColumn } from "@/lib/slug";
 import { notFound, redirect } from "next/navigation";
 import type { Npc } from "@/lib/types";
 
@@ -19,16 +20,17 @@ export default async function EditNpcPage({
   const { data } = await supabase
     .from("npcs")
     .select("*")
-    .eq("id", id)
+    .eq(slugOrIdColumn(id), id)
     .maybeSingle();
   if (!data) notFound();
 
-  const update = updateNpc.bind(null, id);
+  const npc = data as Npc;
+  const update = updateNpc.bind(null, npc.id);
 
   return (
     <div>
-      <PageTitle title={`Modifier ${(data as Npc).name}`} />
-      <NpcForm initial={data as Npc} action={update} />
+      <PageTitle title={`Modifier ${npc.name}`} />
+      <NpcForm initial={npc} action={update} />
     </div>
   );
 }

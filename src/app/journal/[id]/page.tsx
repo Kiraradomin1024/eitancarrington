@@ -8,8 +8,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { DeleteButton } from "@/components/DeleteButton";
 import { deleteDay } from "../actions";
-
-
+import { slugOrIdColumn } from "@/lib/slug";
 
 export default async function DayDetail({
   params,
@@ -25,18 +24,22 @@ export default async function DayDetail({
   const { data } = await supabase
     .from("days")
     .select("*")
-    .eq("id", id)
+    .eq(slugOrIdColumn(id), id)
     .maybeSingle();
   if (!data) notFound();
   const day = data as Day;
+  const dayKey = day.slug ?? day.id;
 
   const { data: linksRaw } = await supabase
     .from("day_npcs")
-    .select("npc_id, npcs(id, name)")
-    .eq("day_id", id);
+    .select("npc_id, npcs(id, name, slug)")
+    .eq("day_id", day.id);
   const linkedNpcs =
     (linksRaw as
-      | { npc_id: string; npcs: { id: string; name: string } | null }[]
+      | {
+          npc_id: string;
+          npcs: { id: string; name: string; slug: string | null } | null;
+        }[]
       | null) ?? [];
 
   return (
@@ -47,13 +50,13 @@ export default async function DayDetail({
         action={
           canEdit && (
             <div className="flex gap-2">
-              <LinkButton href={`/journal/${id}/edit`} variant="ghost">
+              <LinkButton href={`/journal/${dayKey}/edit`} variant="ghost">
                 Modifier
               </LinkButton>
               <DeleteButton
                 action={async () => {
                   "use server";
-                  await deleteDay(id);
+                  await deleteDay(day.id);
                 }}
               />
             </div>
@@ -86,7 +89,7 @@ export default async function DayDetail({
               .map((l) => (
                 <Link
                   key={l.npc_id}
-                  href={`/wiki/${l.npc_id}`}
+                  href={`/wiki/${l.npcs!.slug ?? l.npc_id}`}
                   className="px-3 py-1 rounded-full border border-accent/40 bg-accent/10 text-foreground text-sm hover:bg-accent/20"
                 >
                   {l.npcs!.name}

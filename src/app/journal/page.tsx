@@ -36,7 +36,7 @@ export default async function JournalPage() {
           {days.map((d) => (
             <Link
               key={d.id}
-              href={`/journal/${d.id}`}
+              href={`/journal/${d.slug ?? d.id}`}
               className="card p-5 hover:border-accent/60 transition-colors flex gap-6 items-start block"
             >
               <div className="text-center font-serif text-foreground shrink-0 w-24">

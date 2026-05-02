@@ -53,34 +53,39 @@ export default async function WikiPage() {
       />
 
       {/* Eitan — main character card */}
-      <Link
-        href="/wiki/eitan"
-        className="card card-glow p-5 mb-6 flex gap-4 items-center hover:border-accent/60 transition-colors block"
-      >
+      <div className="card card-glow p-5 mb-6 flex gap-4 items-center hover:border-accent/60 transition-colors relative">
+        <Link
+          href="/wiki/eitan"
+          aria-label="Eitan Carrington"
+          className="absolute inset-0 z-0 rounded-[inherit]"
+        />
         {eitanPhoto ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={eitanPhoto}
             alt="Eitan Carrington"
-            className="w-14 h-14 rounded-full object-cover border-2 border-accent/30 shadow-md shrink-0"
+            className="w-14 h-14 rounded-full object-cover border-2 border-accent/30 shadow-md shrink-0 pointer-events-none relative"
           />
         ) : (
-          <span className="w-14 h-14 rounded-full bg-gradient-to-br from-accent via-accent-2 to-accent-3 flex items-center justify-center text-white font-display text-2xl shadow-md shrink-0">
+          <span className="w-14 h-14 rounded-full bg-gradient-to-br from-accent via-accent-2 to-accent-3 flex items-center justify-center text-white font-display text-2xl shadow-md shrink-0 pointer-events-none relative">
             E
           </span>
         )}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 pointer-events-none relative">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-display text-xl text-foreground">
               Eitan Carrington
             </span>
             {eitanTwitch && (
-              <span
-                className="inline-flex items-center gap-1 text-accent whitespace-nowrap"
+              <a
+                href={`https://www.twitch.tv/${eitanTwitch}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-accent hover:text-accent-2 hover:underline whitespace-nowrap pointer-events-auto relative z-10"
                 title={
                   eitanLive
-                    ? `${eitanTwitch} est en live sur GTA V !`
-                    : `Joué par ${eitanTwitch} sur Twitch`
+                    ? `${eitanTwitch} est en live sur GTA V — clique pour aller sur sa chaîne`
+                    : `Aller sur la chaîne Twitch de ${eitanTwitch}`
                 }
               >
                 <svg
@@ -93,26 +98,32 @@ export default async function WikiPage() {
                 </svg>
                 <span className="text-xs">{eitanTwitch}</span>
                 <TwitchLiveDot isLive={eitanLive} size={7} />
-              </span>
+              </a>
             )}
           </div>
           <div className="text-xs text-muted">
             Personnage principal — voir la fiche complète
           </div>
         </div>
-      </Link>
+      </div>
 
       {npcs.length === 0 ? (
         <Empty>Aucun personnage pour le moment.</Empty>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {npcs.map((n) => (
-            <Link
+            <div
               key={n.id}
-              href={`/wiki/${n.id}`}
-              className="card p-5 hover:border-accent/60 transition-colors block"
+              className="card p-5 hover:border-accent/60 transition-colors relative"
             >
-              <div className="flex gap-4">
+              {/* Full-card click target — sits behind everything via z-0,
+                  while interactive children opt-in to pointer-events-auto */}
+              <Link
+                href={`/wiki/${n.slug ?? n.id}`}
+                aria-label={n.name}
+                className="absolute inset-0 z-0 rounded-[inherit]"
+              />
+              <div className="flex gap-4 pointer-events-none relative">
                 {n.photo_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -135,12 +146,15 @@ export default async function WikiPage() {
                   <div className="text-xs text-muted mt-1 flex items-center gap-2">
                     <span>{STATUS_LABELS[n.status]}</span>
                     {n.twitch_username && (
-                      <span
-                        className="inline-flex items-center gap-1 text-accent whitespace-nowrap min-w-0"
+                      <a
+                        href={`https://www.twitch.tv/${n.twitch_username}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-accent hover:text-accent-2 hover:underline whitespace-nowrap min-w-0 pointer-events-auto relative z-10"
                         title={
                           liveSet.has(n.twitch_username.toLowerCase())
-                            ? `${n.twitch_username} est en live sur Twitch !`
-                            : `Joué par ${n.twitch_username} sur Twitch`
+                            ? `${n.twitch_username} est en live sur GTA V — clique pour aller sur sa chaîne`
+                            : `Aller sur la chaîne Twitch de ${n.twitch_username}`
                         }
                       >
                         <svg
@@ -156,17 +170,17 @@ export default async function WikiPage() {
                           isLive={liveSet.has(n.twitch_username.toLowerCase())}
                           size={7}
                         />
-                      </span>
+                      </a>
                     )}
                   </div>
                 </div>
               </div>
               {n.description && (
-                <p className="text-sm text-foreground/75 mt-3 line-clamp-2">
+                <p className="text-sm text-foreground/75 mt-3 line-clamp-2 pointer-events-none relative">
                   {n.description}
                 </p>
               )}
-            </Link>
+            </div>
           ))}
         </div>
       )}
