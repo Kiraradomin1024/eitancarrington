@@ -24,13 +24,23 @@ export default async function WikiPage() {
 
   const { data: charData } = await supabase
     .from("character")
-    .select("photo_url")
+    .select("photo_url, twitch_username")
     .eq("is_main", true)
     .maybeSingle();
-  const eitanPhoto = (charData as { photo_url: string | null } | null)?.photo_url;
+  const eitan = charData as
+    | { photo_url: string | null; twitch_username: string | null }
+    | null;
+  const eitanPhoto = eitan?.photo_url ?? null;
+  const eitanTwitch = eitan?.twitch_username ?? null;
 
-  // Fetch live status for all NPCs that have a Twitch username (cached 60s)
-  const liveSet = await getLiveStatuses(npcs.map((n) => n.twitch_username));
+  // Fetch live status for all Twitch usernames (Eitan + NPCs) — cached 60s
+  const liveSet = await getLiveStatuses([
+    eitanTwitch,
+    ...npcs.map((n) => n.twitch_username),
+  ]);
+  const eitanLive = eitanTwitch
+    ? liveSet.has(eitanTwitch.toLowerCase())
+    : false;
 
   return (
     <div>
@@ -59,9 +69,32 @@ export default async function WikiPage() {
             E
           </span>
         )}
-        <div>
-          <div className="font-display text-xl text-foreground">
-            Eitan Carrington
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-display text-xl text-foreground">
+              Eitan Carrington
+            </span>
+            {eitanTwitch && (
+              <span
+                className="inline-flex items-center gap-1 text-accent whitespace-nowrap"
+                title={
+                  eitanLive
+                    ? `${eitanTwitch} est en live sur GTA V !`
+                    : `Joué par ${eitanTwitch} sur Twitch`
+                }
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="w-3 h-3 shrink-0"
+                  aria-hidden
+                >
+                  <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z" />
+                </svg>
+                <span className="text-xs">{eitanTwitch}</span>
+                <TwitchLiveDot isLive={eitanLive} size={7} />
+              </span>
+            )}
           </div>
           <div className="text-xs text-muted">
             Personnage principal — voir la fiche complète
