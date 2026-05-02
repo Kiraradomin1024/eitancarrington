@@ -70,6 +70,18 @@ export function CharacterForm({
             />
           </Field>
         </div>
+        <div className="md:col-span-2">
+          <Field
+            label="Streamer (Twitch)"
+            hint="Pseudo Twitch de la personne qui joue Eitan. URL ou @ supportés."
+          >
+            <input
+              name="twitch_username"
+              defaultValue={initial.twitch_username ?? ""}
+              placeholder="ex: pseudostream"
+            />
+          </Field>
+        </div>
         {error && (
           <p className="md:col-span-2 text-danger text-xs">{error}</p>
         )}

@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { Card, LinkButton } from "@/components/ui";
 import type { Character } from "@/lib/types";
+import { getLiveStatuses } from "@/lib/twitch";
+import { TwitchLiveDot } from "@/components/TwitchLiveDot";
 import Link from "next/link";
 
 export default async function Home() {
@@ -44,6 +46,14 @@ export default async function Home() {
   }
   const canEdit = role === "admin";
 
+  // Twitch live status for Eitan's streamer (cached 60s server-side)
+  const liveSet = c?.twitch_username
+    ? await getLiveStatuses([c.twitch_username])
+    : new Set<string>();
+  const isLive = c?.twitch_username
+    ? liveSet.has(c.twitch_username.toLowerCase())
+    : false;
+
   return (
     <div className="space-y-16">
       {/* Hero */}
@@ -75,6 +85,43 @@ export default async function Home() {
           {c?.age ? `${c.age} ans, ` : "21 ans, "}
           dernier des Carrington. Né dans la dorure de Richman Lane.
         </p>
+
+        {c?.twitch_username && (
+          <div className="flex justify-center mt-5">
+            <a
+              href={`https://www.twitch.tv/${c.twitch_username}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={
+                "inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm transition-all border " +
+                (isLive
+                  ? "bg-green-500/10 border-green-500/40 text-green-600 hover:bg-green-500/20 shadow-md shadow-green-500/20 dark:text-green-400"
+                  : "bg-surface border-border text-muted hover:border-accent/40 hover:text-accent")
+              }
+              title={
+                isLive
+                  ? `${c.twitch_username} est en live !`
+                  : `Voir la chaîne de ${c.twitch_username}`
+              }
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-4 h-4"
+                aria-hidden
+              >
+                <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z" />
+              </svg>
+              <span className="font-medium">{c.twitch_username}</span>
+              <TwitchLiveDot isLive={isLive} size={9} />
+              {isLive && (
+                <span className="text-[10px] uppercase tracking-wider font-bold">
+                  En direct
+                </span>
+              )}
+            </a>
+          </div>
+        )}
 
         <div className="flex justify-center gap-3 mt-8 flex-wrap">
           <LinkButton href="/journal" variant="gradient">

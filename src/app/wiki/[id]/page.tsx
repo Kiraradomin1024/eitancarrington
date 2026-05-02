@@ -4,6 +4,8 @@ import { Badge, Card, LinkButton, PageTitle } from "@/components/ui";
 import { MarkdownContent, extractHeadings } from "@/components/MarkdownContent";
 import type { Npc, Relation } from "@/lib/types";
 import { RELATION_LABELS, STATUS_LABELS } from "@/lib/types";
+import { getLiveStatuses } from "@/lib/twitch";
+import { TwitchLiveDot } from "@/components/TwitchLiveDot";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DeleteButton } from "@/components/DeleteButton";
@@ -54,6 +56,14 @@ export default async function NpcDetail({
   // Extract table of contents from description
   const headings = n.description ? extractHeadings(n.description) : [];
 
+  // Twitch live status (cached 60s server-side)
+  const liveSet = n.twitch_username
+    ? await getLiveStatuses([n.twitch_username])
+    : new Set<string>();
+  const isLive = n.twitch_username
+    ? liveSet.has(n.twitch_username.toLowerCase())
+    : false;
+
   return (
     <div>
       <PageTitle
@@ -102,22 +112,33 @@ export default async function NpcDetail({
               {n.twitch_username && (
                 <div className="flex justify-between gap-4 border-b border-border/50 pb-1">
                   <dt className="text-muted">Streamer</dt>
-                  <dd className="text-right">
+                  <dd className="min-w-0">
                     <a
                       href={`https://www.twitch.tv/${n.twitch_username}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-accent hover:text-accent-2 link-fancy"
+                      className="inline-flex items-center gap-1.5 text-accent hover:text-accent-2 hover:underline whitespace-nowrap max-w-full"
+                      title={
+                        isLive
+                          ? `${n.twitch_username} est en live !`
+                          : `Voir la chaîne de ${n.twitch_username}`
+                      }
                     >
                       <svg
                         viewBox="0 0 24 24"
                         fill="currentColor"
-                        className="w-3.5 h-3.5"
+                        className="w-4 h-4 shrink-0"
                         aria-hidden
                       >
-                        <path d="M4.265 3 3 6.236v12.5h4.471V21h2.5l2.265-2.265h3.529L21 13.736V3H4.265zm15.118 10.029-2.265 2.265h-3.529L11.324 17.56v-2.265H7.794V4.471h11.589v8.558zM16.882 7.471v4.823h-1.588V7.47h1.588zm-3.529 0v4.823h-1.589V7.47h1.589z" />
+                        <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z" />
                       </svg>
-                      {n.twitch_username}
+                      <span className="truncate">{n.twitch_username}</span>
+                      <TwitchLiveDot isLive={isLive} size={9} />
+                      {isLive && (
+                        <span className="text-[10px] uppercase tracking-wider text-green-600 dark:text-green-400 font-bold">
+                          Live
+                        </span>
+                      )}
                     </a>
                   </dd>
                 </div>

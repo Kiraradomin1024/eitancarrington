@@ -30,6 +30,17 @@ export async function setRole(userId: string, role: string) {
   revalidatePath("/admin");
 }
 
+function cleanTwitch(raw: FormDataEntryValue | null): string | null {
+  if (!raw) return null;
+  let s = String(raw).trim();
+  if (!s) return null;
+  s = s.replace(/^https?:\/\/(www\.)?twitch\.tv\//i, "");
+  s = s.replace(/^[@/]+/, "");
+  s = s.replace(/[/?#].*$/, "");
+  s = s.replace(/[^a-zA-Z0-9_]/g, "");
+  return s || null;
+}
+
 export async function updateCharacter(formData: FormData) {
   const supabase = await ensureAdmin();
   const traitsRaw = (formData.get("traits") as string) || "";
@@ -44,6 +55,7 @@ export async function updateCharacter(formData: FormData) {
     background: (formData.get("background") as string) || null,
     photo_url: (formData.get("photo_url") as string) || null,
     traits,
+    twitch_username: cleanTwitch(formData.get("twitch_username")),
     updated_at: new Date().toISOString(),
   };
   const { error } = await supabase

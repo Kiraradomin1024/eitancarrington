@@ -4,6 +4,8 @@ import { getCurrentUserAndRole } from "@/lib/auth";
 import { Empty, LinkButton, PageTitle } from "@/components/ui";
 import type { Npc } from "@/lib/types";
 import { STATUS_LABELS } from "@/lib/types";
+import { getLiveStatuses } from "@/lib/twitch";
+import { TwitchLiveDot } from "@/components/TwitchLiveDot";
 import Link from "next/link";
 
 
@@ -26,6 +28,9 @@ export default async function WikiPage() {
     .eq("is_main", true)
     .maybeSingle();
   const eitanPhoto = (charData as { photo_url: string | null } | null)?.photo_url;
+
+  // Fetch live status for all NPCs that have a Twitch username (cached 60s)
+  const liveSet = await getLiveStatuses(npcs.map((n) => n.twitch_username));
 
   return (
     <div>
@@ -98,18 +103,26 @@ export default async function WikiPage() {
                     <span>{STATUS_LABELS[n.status]}</span>
                     {n.twitch_username && (
                       <span
-                        className="inline-flex items-center gap-1 text-accent"
-                        title={`Joué par ${n.twitch_username} sur Twitch`}
+                        className="inline-flex items-center gap-1 text-accent whitespace-nowrap min-w-0"
+                        title={
+                          liveSet.has(n.twitch_username.toLowerCase())
+                            ? `${n.twitch_username} est en live sur Twitch !`
+                            : `Joué par ${n.twitch_username} sur Twitch`
+                        }
                       >
                         <svg
                           viewBox="0 0 24 24"
                           fill="currentColor"
-                          className="w-3 h-3"
+                          className="w-3 h-3 shrink-0"
                           aria-hidden
                         >
-                          <path d="M4.265 3 3 6.236v12.5h4.471V21h2.5l2.265-2.265h3.529L21 13.736V3H4.265zm15.118 10.029-2.265 2.265h-3.529L11.324 17.56v-2.265H7.794V4.471h11.589v8.558zM16.882 7.471v4.823h-1.588V7.47h1.588zm-3.529 0v4.823h-1.589V7.47h1.589z" />
+                          <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z" />
                         </svg>
-                        {n.twitch_username}
+                        <span className="truncate">{n.twitch_username}</span>
+                        <TwitchLiveDot
+                          isLive={liveSet.has(n.twitch_username.toLowerCase())}
+                          size={7}
+                        />
                       </span>
                     )}
                   </div>

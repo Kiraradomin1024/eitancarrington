@@ -16,6 +16,7 @@ export type Character = {
   background: string | null;
   photo_url: string | null;
   traits: string[];
+  twitch_username: string | null;
   is_main: boolean;
   updated_at: string;
 };

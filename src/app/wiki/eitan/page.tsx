@@ -3,6 +3,8 @@ import { getCurrentUserAndRole, isAdmin } from "@/lib/auth";
 import { Card, LinkButton, PageTitle, Badge } from "@/components/ui";
 import type { Character } from "@/lib/types";
 import { MarkdownContent } from "@/components/MarkdownContent";
+import { getLiveStatuses } from "@/lib/twitch";
+import { TwitchLiveDot } from "@/components/TwitchLiveDot";
 
 
 
@@ -28,6 +30,14 @@ export default async function EitanWikiPage() {
       </div>
     );
   }
+
+  // Twitch live status (cached 60s server-side)
+  const liveSet = c.twitch_username
+    ? await getLiveStatuses([c.twitch_username])
+    : new Set<string>();
+  const isLive = c.twitch_username
+    ? liveSet.has(c.twitch_username.toLowerCase())
+    : false;
 
   return (
     <div>
@@ -61,8 +71,42 @@ export default async function EitanWikiPage() {
             )}
             <dl className="text-sm space-y-2">
               <InfoRow k="Nom complet" v={c.name} />
-            
+
               <InfoRow k="Statut" v="En vie" />
+              {c.twitch_username && (
+                <div className="flex justify-between gap-4 border-b border-border/50 pb-1">
+                  <dt className="text-muted">Streamer</dt>
+                  <dd className="min-w-0">
+                    <a
+                      href={`https://www.twitch.tv/${c.twitch_username}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-accent hover:text-accent-2 hover:underline whitespace-nowrap max-w-full"
+                      title={
+                        isLive
+                          ? `${c.twitch_username} est en live !`
+                          : `Voir la chaîne de ${c.twitch_username}`
+                      }
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="w-4 h-4 shrink-0"
+                        aria-hidden
+                      >
+                        <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z" />
+                      </svg>
+                      <span className="truncate">{c.twitch_username}</span>
+                      <TwitchLiveDot isLive={isLive} size={9} />
+                      {isLive && (
+                        <span className="text-[10px] uppercase tracking-wider text-green-600 dark:text-green-400 font-bold">
+                          Live
+                        </span>
+                      )}
+                    </a>
+                  </dd>
+                </div>
+              )}
             </dl>
             {c.traits && c.traits.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-1.5">
