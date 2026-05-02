@@ -221,6 +221,7 @@ export function MindmapClient({
           },
           data: {
             id: npc.id,
+            slug: npc.slug,
             name: npc.name,
             photoUrl: npc.photo_url,
             family: npc.family,
@@ -283,7 +284,8 @@ export function MindmapClient({
       if (node.id === "MAIN") {
         router.push("/wiki/eitan");
       } else {
-        router.push(`/wiki/${node.id}`);
+        const slug = (node.data as NpcNodeData)?.slug;
+        router.push(`/wiki/${slug ?? node.id}`);
       }
     },
     [router]
