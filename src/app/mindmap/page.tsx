@@ -13,31 +13,50 @@ export default async function MindmapPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: char }, { data: npcs }, { data: rels }, layoutQuery] =
-    await Promise.all([
-      supabase
-        .from("character")
-        .select("id, name, photo_url")
-        .eq("is_main", true)
-        .maybeSingle(),
-      supabase.from("npcs").select("*"),
-      supabase.from("relations").select("*"),
-      user
-        ? supabase
-            .from("mindmap_layouts")
-            .select("node_id, x, y")
-            .eq("user_id", user.id)
-        : Promise.resolve({ data: null }),
-    ]);
+  const DEFAULT_LAYOUT_USER_ID = "5052d3be-d8da-405f-940a-de0fab67a497";
 
-  const savedLayout: Record<string, { x: number; y: number }> = {};
-  for (const row of (layoutQuery.data ?? []) as {
-    node_id: string;
-    x: number;
-    y: number;
-  }[]) {
-    savedLayout[row.node_id] = { x: row.x, y: row.y };
+  const [
+    { data: char },
+    { data: npcs },
+    { data: rels },
+    defaultLayoutQuery,
+    userLayoutQuery,
+  ] = await Promise.all([
+    supabase
+      .from("character")
+      .select("id, name, photo_url")
+      .eq("is_main", true)
+      .maybeSingle(),
+    supabase.from("npcs").select("*"),
+    supabase.from("relations").select("*"),
+    supabase
+      .from("mindmap_layouts")
+      .select("node_id, x, y")
+      .eq("user_id", DEFAULT_LAYOUT_USER_ID),
+    user && user.id !== DEFAULT_LAYOUT_USER_ID
+      ? supabase
+          .from("mindmap_layouts")
+          .select("node_id, x, y")
+          .eq("user_id", user.id)
+      : Promise.resolve({ data: null }),
+  ]);
+
+  type LayoutRow = { node_id: string; x: number; y: number };
+
+  const defaultLayout: Record<string, { x: number; y: number }> = {};
+  for (const row of (defaultLayoutQuery.data ?? []) as LayoutRow[]) {
+    defaultLayout[row.node_id] = { x: row.x, y: row.y };
   }
+
+  const userLayout: Record<string, { x: number; y: number }> = {};
+  for (const row of (userLayoutQuery.data ?? []) as LayoutRow[]) {
+    userLayout[row.node_id] = { x: row.x, y: row.y };
+  }
+
+  const hasUserLayout = Object.keys(userLayout).length > 0;
+  const savedLayout = hasUserLayout
+    ? { ...defaultLayout, ...userLayout }
+    : defaultLayout;
 
   return (
     <div>
@@ -64,6 +83,7 @@ export default async function MindmapPage() {
           canEdit={canEdit}
           isLoggedIn={!!user}
           savedLayout={savedLayout}
+          hasUserLayout={hasUserLayout}
         />
       )}
     </div>

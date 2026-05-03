@@ -50,7 +50,6 @@ export type RelationType =
   | "contact"
   | "rival"
   | "mentor"
-  | "neighbor"
   | "colleague"
   | "other";
 
@@ -122,7 +121,6 @@ export const RELATION_LABELS: Record<RelationType, string> = {
   contact: "Contact",
   rival: "Rival",
   mentor: "Mentor",
-  neighbor: "Voisin",
   colleague: "Collègue",
   other: "Autre",
 };

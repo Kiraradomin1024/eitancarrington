@@ -30,7 +30,6 @@ const TYPE_COLOR: Record<string, string> = {
   contact: "#9c95ad",
   rival: "#d4a04e",
   mentor: "#c084fc",
-  neighbor: "#a8b1c7",
   colleague: "#4fb3a3",
   other: "#9c95ad",
 };
@@ -193,6 +192,7 @@ export function MindmapClient({
   canEdit = false,
   isLoggedIn = false,
   savedLayout = {},
+  hasUserLayout = false,
 }: {
   mainCharacter: Pick<Character, "id" | "name" | "photo_url">;
   npcs: Npc[];
@@ -200,6 +200,7 @@ export function MindmapClient({
   canEdit?: boolean;
   isLoggedIn?: boolean;
   savedLayout?: Record<string, { x: number; y: number }>;
+  hasUserLayout?: boolean;
 }) {
   const router = useRouter();
   const hasSaved = Object.keys(savedLayout).length > 0;
@@ -505,7 +506,7 @@ export function MindmapClient({
         /* ── Toolbar full mode — save / reset perso layout ── */
         <div className="flex flex-wrap items-center gap-3 p-3 card !p-3">
           <span className="text-xs text-muted">
-            {hasSaved
+            {hasUserLayout
               ? "Tu visualises ton layout perso."
               : "Drag les nœuds, sauvegarde ton arrangement."}
           </span>
@@ -516,7 +517,7 @@ export function MindmapClient({
                   {saveMsg}
                 </span>
               )}
-              {hasSaved && (
+              {hasUserLayout && (
                 <button
                   type="button"
                   onClick={onReset}

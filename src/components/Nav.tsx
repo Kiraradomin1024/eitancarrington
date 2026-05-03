@@ -10,7 +10,6 @@ const links = [
   { href: "/", label: "Eitan" },
   { href: "/wiki", label: "Wiki" },
   { href: "/journal", label: "Journal" },
-  { href: "/relations", label: "Relations" },
   { href: "/mindmap", label: "Mindmap" },
   { href: "/enquetes", label: "Enquêtes" },
   { href: "/soucis", label: "Soucis" },
