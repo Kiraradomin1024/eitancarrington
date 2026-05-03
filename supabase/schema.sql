@@ -106,7 +106,7 @@ create table if not exists public.relations (
   id uuid primary key default gen_random_uuid(),
   source_npc_id uuid references public.npcs(id) on delete cascade,
   target_npc_id uuid not null references public.npcs(id) on delete cascade,
-  type text not null check (type in ('family','friend','enemy','romance','business','contact','rival','mentor','other')),
+  type text not null check (type in ('family','friend','enemy','romance','business','contact','rival','mentor','neighbor','colleague','other')),
   intensity int default 0 check (intensity between -5 and 5),
   description text,
   created_by uuid references public.profiles(id) on delete set null,

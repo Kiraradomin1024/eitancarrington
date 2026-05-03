@@ -89,7 +89,8 @@ export async function createNpc(formData: FormData) {
     });
   }
   if (relRows.length > 0) {
-    await supabase.from("relations").insert(relRows);
+    const { error: relErr } = await supabase.from("relations").insert(relRows);
+    if (relErr) throw new Error(`Relations insert failed: ${relErr.message}`);
     revalidatePath("/relations");
     revalidatePath("/mindmap");
   }
@@ -167,13 +168,6 @@ export async function updateNpc(id: string, formData: FormData) {
     k.startsWith("relation_")
   );
   if (formHasRelationFields) {
-    // Delete all relations involving this NPC in either direction,
-    // then re-insert with this NPC as source — keeps the form authoritative
-    // for this perso's links.
-    await supabase
-      .from("relations")
-      .delete()
-      .or(`source_npc_id.eq.${id},target_npc_id.eq.${id}`);
     if (desired.size > 0) {
       const rows = Array.from(desired.entries()).map(([targetId, type]) => ({
         source_npc_id: id,
@@ -183,7 +177,57 @@ export async function updateNpc(id: string, formData: FormData) {
         description: null,
         created_by: user.id,
       }));
-      await supabase.from("relations").insert(rows);
+
+      // Insert new relations first — if this fails (e.g. invalid type),
+      // we bail out WITHOUT having deleted the old ones.
+      const { error: insertErr } = await supabase
+        .from("relations")
+        .insert(rows);
+      if (insertErr) throw new Error(`Relations insert failed: ${insertErr.message}`);
+
+      // Insert succeeded — now delete the OLD rows that are not in the new set.
+      // Old rows are those involving this NPC that were NOT just inserted.
+      // Since we inserted duplicates, clean up by removing all pre-existing
+      // rows for this NPC and keeping only the freshly inserted ones.
+      // Simplest correct approach: delete rows where this NPC is involved
+      // that are NOT in the desired set.
+      const desiredTargets = Array.from(desired.keys());
+      // Delete outgoing relations to targets NOT in the new set
+      const { error: delOldOut } = await supabase
+        .from("relations")
+        .delete()
+        .eq("source_npc_id", id)
+        .not("target_npc_id", "in", `(${desiredTargets.join(",")})`);
+      if (delOldOut) throw new Error(`Relations cleanup failed: ${delOldOut.message}`);
+      // Delete incoming relations from this NPC (direction flip)
+      await supabase
+        .from("relations")
+        .delete()
+        .eq("target_npc_id", id);
+      // Remove duplicate rows: keep only the newest per (source, target) pair
+      // by deleting older duplicates.
+      for (const targetId of desiredTargets) {
+        const { data: dups } = await supabase
+          .from("relations")
+          .select("id, created_at")
+          .eq("source_npc_id", id)
+          .eq("target_npc_id", targetId)
+          .order("created_at", { ascending: false });
+        if (dups && dups.length > 1) {
+          const idsToDelete = dups.slice(1).map((r) => r.id);
+          await supabase
+            .from("relations")
+            .delete()
+            .in("id", idsToDelete);
+        }
+      }
+    } else {
+      // The form had relation fields but none selected — clear all relations
+      const { error: delErr } = await supabase
+        .from("relations")
+        .delete()
+        .or(`source_npc_id.eq.${id},target_npc_id.eq.${id}`);
+      if (delErr) throw new Error(`Relations delete failed: ${delErr.message}`);
     }
     revalidatePath("/relations");
     revalidatePath("/mindmap");
