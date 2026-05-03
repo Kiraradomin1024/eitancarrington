@@ -16,13 +16,17 @@ const links = [
 ];
 
 export function Nav({
+  userId,
   userEmail,
   role,
   displayName,
+  avatarUrl,
 }: {
+  userId: string | null;
   userEmail: string | null;
   role: string | null;
   displayName: string | null;
+  avatarUrl: string | null;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -78,17 +82,30 @@ export function Nav({
             )}
             {userEmail ? (
               <>
-                <span className="hidden sm:flex items-center gap-2 text-muted">
-                  <span className="w-7 h-7 rounded-full bg-gradient-to-br from-accent-2 to-accent-3 text-white text-xs flex items-center justify-center">
-                    {(displayName ?? userEmail)[0]?.toUpperCase()}
-                  </span>
+                <Link
+                  href={userId ? `/u/${userId}` : "/u/edit"}
+                  className="hidden sm:flex items-center gap-2 text-muted hover:text-foreground"
+                  title="Mon profil"
+                >
+                  {avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={avatarUrl}
+                      alt=""
+                      className="w-7 h-7 rounded-full object-cover border border-border"
+                    />
+                  ) : (
+                    <span className="w-7 h-7 rounded-full bg-gradient-to-br from-accent-2 to-accent-3 text-white text-xs flex items-center justify-center">
+                      {(displayName ?? userEmail)[0]?.toUpperCase()}
+                    </span>
+                  )}
                   <span className="text-foreground/80">
                     {displayName ?? userEmail}
                   </span>
                   {role === "pending" && (
                     <span className="text-xs text-warn">en attente</span>
                   )}
-                </span>
+                </Link>
                 <form action="/auth/signout" method="post">
                   <button className="text-muted hover:text-accent text-xs">
                     Sortir
@@ -128,6 +145,15 @@ export function Nav({
                 {l.label}
               </Link>
             ))}
+            {userId && (
+              <Link
+                href={`/u/${userId}`}
+                onClick={() => setOpen(false)}
+                className="px-3 py-2 rounded-lg hover:bg-accent-soft text-sm"
+              >
+                Mon profil
+              </Link>
+            )}
             {role === "admin" && (
               <Link
                 href="/admin"

@@ -5,7 +5,16 @@ export type Profile = {
   email: string;
   display_name: string | null;
   role: Role;
+  avatar_url: string | null;
+  bio: string | null;
   created_at: string;
+};
+
+export type PublicProfile = {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
 };
 
 export type Character = {

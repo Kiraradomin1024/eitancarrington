@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+const KIRARA_UID = "ced3f4f5-39c2-468a-a405-39d6785b8e96";
+
 async function ensureAdmin() {
   const supabase = await createClient();
   if (!supabase) throw new Error("Not configured");
@@ -66,4 +68,55 @@ export async function updateCharacter(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/wiki/eitan");
   redirect("/wiki/eitan");
+}
+
+/**
+ * Full database backup — only callable by Kirara.
+ * Returns a JSON snapshot of all content tables (no auth/storage).
+ */
+export async function exportFullBackup(): Promise<{
+  filename: string;
+  json: string;
+}> {
+  const supabase = await createClient();
+  if (!supabase) throw new Error("Not configured");
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.id !== KIRARA_UID) {
+    throw new Error("Accès refusé");
+  }
+
+  const tables = [
+    "profiles",
+    "character",
+    "npcs",
+    "relations",
+    "days",
+    "day_npcs",
+    "investigations",
+    "investigation_clues",
+    "investigation_npcs",
+    "issues",
+    "mindmap_layouts",
+  ] as const;
+
+  const snapshot: Record<string, unknown> = {
+    exported_at: new Date().toISOString(),
+    exported_by: user.id,
+  };
+
+  for (const t of tables) {
+    const { data, error } = await supabase.from(t).select("*");
+    if (error) {
+      throw new Error(`Erreur sur table ${t} : ${error.message}`);
+    }
+    snapshot[t] = data ?? [];
+  }
+
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  return {
+    filename: `eitan-backup-${stamp}.json`,
+    json: JSON.stringify(snapshot, null, 2),
+  };
 }

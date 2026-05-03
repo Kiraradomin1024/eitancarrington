@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { SetupNotice } from "@/components/SetupNotice";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -28,8 +29,29 @@ const caveat = Caveat({
 });
 
 export const metadata: Metadata = {
-  title: "Eitan Carrington — Journal",
-  description: "Journal personnel d'Eitan Carrington — Richman Lane, Los Santos.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Eitan Carrington — Journal",
+    template: "%s — Journal d'Eitan",
+  },
+  description:
+    "Dossier RP d'Eitan Carrington : wiki des proches, journal de sessions, mindmap des relations, enquêtes. Richman Lane, Los Santos.",
+  applicationName: SITE_NAME,
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    locale: "fr_FR",
+    title: "Eitan Carrington — Journal",
+    description:
+      "Dossier RP d'Eitan Carrington : wiki des proches, journal de sessions, mindmap des relations, enquêtes.",
+    url: SITE_URL,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Eitan Carrington — Journal",
+    description:
+      "Dossier RP d'Eitan Carrington : wiki, journal, mindmap, enquêtes.",
+  },
 };
 
 /* Inline script injected into <head> to apply the saved theme
@@ -49,9 +71,11 @@ export default async function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const configured = isSupabaseConfigured();
 
+  let userId: string | null = null;
   let userEmail: string | null = null;
   let role: string | null = null;
   let displayName: string | null = null;
+  let avatarUrl: string | null = null;
 
   if (configured) {
     const supabase = await createClient();
@@ -60,14 +84,16 @@ export default async function RootLayout({
         data: { user },
       } = await supabase.auth.getUser();
       userEmail = user?.email ?? null;
+      userId = user?.id ?? null;
       if (user) {
         const { data } = await supabase
           .from("profiles")
-          .select("role, display_name")
+          .select("role, display_name, avatar_url")
           .eq("id", user.id)
           .maybeSingle();
         role = data?.role ?? null;
         displayName = data?.display_name ?? null;
+        avatarUrl = (data?.avatar_url as string | null) ?? null;
       }
     }
   }
@@ -83,7 +109,13 @@ export default async function RootLayout({
       </head>
       <body className="min-h-screen flex flex-col">
         <ThemeProvider>
-          <Nav userEmail={userEmail} role={role} displayName={displayName} />
+          <Nav
+            userId={userId}
+            userEmail={userEmail}
+            role={role}
+            displayName={displayName}
+            avatarUrl={avatarUrl}
+          />
           <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-10 fade-up">
             {configured ? children : <SetupNotice />}
           </main>

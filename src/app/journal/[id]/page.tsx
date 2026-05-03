@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUserAndRole, isAdmin } from "@/lib/auth";
+import { canContribute, getCurrentUserAndRole } from "@/lib/auth";
 import { Card, LinkButton, PageTitle } from "@/components/ui";
 import { MarkdownContent } from "@/components/MarkdownContent";
 import type { Day } from "@/lib/types";
@@ -9,6 +9,48 @@ import Link from "next/link";
 import { DeleteButton } from "@/components/DeleteButton";
 import { deleteDay } from "../actions";
 import { slugOrIdColumn } from "@/lib/slug";
+import type { Metadata } from "next";
+import { truncateForMeta } from "@/lib/seo";
+import { HistoryPanel } from "@/components/HistoryPanel";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  if (!supabase) return {};
+  const { data } = await supabase
+    .from("days")
+    .select("title, summary, content, day_number, date")
+    .eq(slugOrIdColumn(id), id)
+    .maybeSingle();
+  if (!data) return { title: "Session introuvable" };
+  const d = data as {
+    title: string;
+    summary: string | null;
+    content: string | null;
+    day_number: number | null;
+    date: string;
+  };
+  const title = d.day_number ? `Jour ${d.day_number} — ${d.title}` : d.title;
+  const description =
+    truncateForMeta(d.summary) ??
+    truncateForMeta(d.content) ??
+    `Session de jeu d'Eitan Carrington — ${formatDate(d.date)}.`;
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      publishedTime: d.date,
+    },
+    twitter: { card: "summary", title, description },
+  };
+}
 
 export default async function DayDetail({
   params,
@@ -19,7 +61,7 @@ export default async function DayDetail({
   const supabase = await createClient();
   if (!supabase) return null;
   const { role } = await getCurrentUserAndRole();
-  const canEdit = isAdmin(role);
+  const canEdit = canContribute(role);
 
   const { data } = await supabase
     .from("days")
@@ -117,6 +159,10 @@ export default async function DayDetail({
           </div>
         </div>
       )}
+
+      <div className="mt-6">
+        <HistoryPanel entityType="days" entityId={day.id} />
+      </div>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUserAndRole, isAdmin } from "@/lib/auth";
+import { canContribute, getCurrentUserAndRole } from "@/lib/auth";
 import { Badge, Card, LinkButton, PageTitle } from "@/components/ui";
 import { MarkdownContent, extractHeadings } from "@/components/MarkdownContent";
 import type { Npc, Relation } from "@/lib/types";
@@ -11,8 +11,52 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DeleteButton } from "@/components/DeleteButton";
 import { deleteNpc } from "../actions";
+import type { Metadata } from "next";
+import { truncateForMeta } from "@/lib/seo";
+import { HistoryPanel } from "@/components/HistoryPanel";
 
-
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  if (!supabase) return {};
+  const { data } = await supabase
+    .from("npcs")
+    .select("name, description, occupation, family, photo_url")
+    .eq(slugOrIdColumn(id), id)
+    .maybeSingle();
+  if (!data) return { title: "Personnage introuvable" };
+  const npc = data as Pick<
+    Npc,
+    "name" | "description" | "occupation" | "family" | "photo_url"
+  >;
+  const subtitle = npc.occupation ?? npc.family ?? null;
+  const description =
+    truncateForMeta(npc.description) ??
+    (subtitle
+      ? `${npc.name} — ${subtitle}. Fiche du wiki d'Eitan Carrington.`
+      : `Fiche de ${npc.name} dans le wiki d'Eitan Carrington.`);
+  const images = npc.photo_url ? [{ url: npc.photo_url, alt: npc.name }] : undefined;
+  return {
+    title: npc.name,
+    description,
+    openGraph: {
+      title: npc.name,
+      description,
+      type: "profile",
+      images,
+    },
+    twitter: {
+      card: images ? "summary_large_image" : "summary",
+      title: npc.name,
+      description,
+      images: images?.map((i) => i.url),
+    },
+  };
+}
 
 export default async function NpcDetail({
   params,
@@ -23,7 +67,7 @@ export default async function NpcDetail({
   const supabase = await createClient();
   if (!supabase) return null;
   const { role } = await getCurrentUserAndRole();
-  const canEdit = isAdmin(role);
+  const canEdit = canContribute(role);
 
   const { data: npc } = await supabase
     .from("npcs")
@@ -249,6 +293,8 @@ export default async function NpcDetail({
               </ul>
             )}
           </Card>
+
+          <HistoryPanel entityType="npcs" entityId={n.id} />
         </div>
       </div>
     </div>

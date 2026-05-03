@@ -2,7 +2,7 @@
 
 import { Badge, Card, Button } from "@/components/ui";
 import type { Profile } from "@/lib/types";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 
 const TONE = {
   pending: "warn",
@@ -67,5 +67,46 @@ export function ProfileRow({
         </div>
       </div>
     </Card>
+  );
+}
+
+export function BackupButton({
+  exportAction,
+}: {
+  exportAction: () => Promise<{ filename: string; json: string }>;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  async function handleClick() {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const { filename, json } = await exportAction();
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setMsg("Backup téléchargé ✓");
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setBusy(false);
+      setTimeout(() => setMsg(null), 4000);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      <Button onClick={handleClick} disabled={busy}>
+        {busy ? "Export en cours…" : "Télécharger un backup JSON"}
+      </Button>
+      {msg && <span className="text-xs text-muted">{msg}</span>}
+    </div>
   );
 }

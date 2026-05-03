@@ -3,16 +3,22 @@ import { getCurrentUserAndRole, isAdmin } from "@/lib/auth";
 import { Card, LinkButton, PageTitle } from "@/components/ui";
 import { redirect } from "next/navigation";
 import type { Profile } from "@/lib/types";
-import { ProfileRow } from "./client-parts";
-import { setRole } from "./actions";
+import { ProfileRow, BackupButton } from "./client-parts";
+import { setRole, exportFullBackup } from "./actions";
+import { ActivityFeed } from "@/components/ActivityFeed";
 
-
+const KIRARA_UID = "ced3f4f5-39c2-468a-a405-39d6785b8e96";
 
 export default async function AdminPage() {
   const { role } = await getCurrentUserAndRole();
   if (!isAdmin(role)) redirect("/");
   const supabase = await createClient();
   if (!supabase) return null;
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isKirara = user?.id === KIRARA_UID;
 
   const { data } = await supabase
     .from("profiles")
@@ -70,7 +76,7 @@ export default async function AdminPage() {
         )}
       </section>
 
-      <section>
+      <section className="mb-10">
         <h2 className="font-serif text-2xl text-foreground mb-3 title-rule">
           Admins ({admins.length})
         </h2>
@@ -79,6 +85,31 @@ export default async function AdminPage() {
             <ProfileRow key={p.id} profile={p} setRoleAction={setRole} />
           ))}
         </div>
+      </section>
+
+      {isKirara && (
+        <section className="mb-10">
+          <h2 className="font-serif text-2xl text-foreground mb-3 title-rule">
+            Backup
+          </h2>
+          <p className="text-muted text-sm mb-4">
+            Télécharge un instantané JSON de toutes les tables de contenu
+            (profils, NPCs, relations, journal, enquêtes, soucis, layouts
+            mindmap). Réservé à toi.
+          </p>
+          <BackupButton exportAction={exportFullBackup} />
+        </section>
+      )}
+
+      <section>
+        <h2 className="font-serif text-2xl text-foreground mb-3 title-rule">
+          Activité récente
+        </h2>
+        <p className="text-muted text-sm mb-4">
+          Les 50 dernières modifications sur le contenu, tous contributeurs
+          confondus.
+        </p>
+        <ActivityFeed limit={50} />
       </section>
     </div>
   );

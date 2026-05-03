@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { canContribute, getCurrentUserAndRole, isAdmin } from "@/lib/auth";
+import { canContribute, getCurrentUserAndRole } from "@/lib/auth";
 import {
   Badge,
   Card,
@@ -20,6 +20,39 @@ import {
 } from "../actions";
 import { ClueForm, NpcLinker } from "./client-parts";
 import { slugOrIdColumn } from "@/lib/slug";
+import type { Metadata } from "next";
+import { truncateForMeta } from "@/lib/seo";
+import { HistoryPanel } from "@/components/HistoryPanel";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  if (!supabase) return {};
+  const { data } = await supabase
+    .from("investigations")
+    .select("title, description, status")
+    .eq(slugOrIdColumn(id), id)
+    .maybeSingle();
+  if (!data) return { title: "Enquête introuvable" };
+  const inv = data as { title: string; description: string | null; status: string };
+  const description =
+    truncateForMeta(inv.description) ??
+    `Enquête en cours dans le dossier d'Eitan Carrington (${
+      INVESTIGATION_STATUS_LABELS[
+        inv.status as keyof typeof INVESTIGATION_STATUS_LABELS
+      ] ?? inv.status
+    }).`;
+  return {
+    title: inv.title,
+    description,
+    openGraph: { title: inv.title, description, type: "article" },
+    twitter: { card: "summary", title: inv.title, description },
+  };
+}
 
 
 
@@ -60,7 +93,7 @@ export default async function InvDetail({
   if (!supabase) return null;
   const { role } = await getCurrentUserAndRole();
   const canAdd = canContribute(role);
-  const canEdit = isAdmin(role);
+  const canEdit = canContribute(role);
 
   const { data: inv } = await supabase
     .from("investigations")
@@ -235,6 +268,10 @@ export default async function InvDetail({
             )}
           </Card>
         </div>
+      </div>
+
+      <div className="mt-6">
+        <HistoryPanel entityType="investigations" entityId={i.id} />
       </div>
     </div>
   );
