@@ -167,7 +167,13 @@ export async function updateNpc(id: string, formData: FormData) {
     k.startsWith("relation_")
   );
   if (formHasRelationFields) {
-    await supabase.from("relations").delete().eq("source_npc_id", id);
+    // Delete all relations involving this NPC in either direction,
+    // then re-insert with this NPC as source — keeps the form authoritative
+    // for this perso's links.
+    await supabase
+      .from("relations")
+      .delete()
+      .or(`source_npc_id.eq.${id},target_npc_id.eq.${id}`);
     if (desired.size > 0) {
       const rows = Array.from(desired.entries()).map(([targetId, type]) => ({
         source_npc_id: id,

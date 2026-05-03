@@ -33,17 +33,20 @@ export default async function EditNpcPage({
     .order("name", { ascending: true });
   const existingNpcs = (npcsRaw ?? []) as { id: string; name: string }[];
 
-  // Pre-fill relations where this NPC is the source.
+  // Pre-fill relations involving this NPC in either direction.
   const { data: relsRaw } = await supabase
     .from("relations")
-    .select("target_npc_id, type")
-    .eq("source_npc_id", npc.id);
+    .select("source_npc_id, target_npc_id, type")
+    .or(`source_npc_id.eq.${npc.id},target_npc_id.eq.${npc.id}`);
   const initialRelations: Record<string, RelationType> = {};
   for (const r of (relsRaw ?? []) as {
-    target_npc_id: string;
+    source_npc_id: string | null;
+    target_npc_id: string | null;
     type: RelationType;
   }[]) {
-    if (r.target_npc_id) initialRelations[r.target_npc_id] = r.type;
+    const otherId =
+      r.source_npc_id === npc.id ? r.target_npc_id : r.source_npc_id;
+    if (otherId) initialRelations[otherId] = r.type;
   }
 
   const update = updateNpc.bind(null, npc.id);

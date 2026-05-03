@@ -237,6 +237,7 @@ export function MindmapClient({
     if (mode !== "explore") return null;
     const visibleIds = new Set<string>([focusId]);
     const visibleRels: Relation[] = [];
+    const seenPairs = new Set<string>();
     for (const r of relations) {
       const src = r.source_npc_id ?? "MAIN";
       const tgt = r.target_npc_id;
@@ -247,6 +248,9 @@ export function MindmapClient({
         const otherNpc = npcById.get(otherId);
         if (otherNpc?.family !== filterFamily) continue;
       }
+      const pairKey = [src, tgt].sort().join("::");
+      if (seenPairs.has(pairKey)) continue;
+      seenPairs.add(pairKey);
       visibleIds.add(src);
       visibleIds.add(tgt);
       visibleRels.push(r);
@@ -285,7 +289,12 @@ export function MindmapClient({
     const out = new Map<string, { x: number; y: number }>();
     const directlyLinked = new Set<string>();
     relations.forEach((r) => {
-      if (!r.source_npc_id) directlyLinked.add(r.target_npc_id);
+      // Eitan is encoded as source_npc_id=null. Treat the relation as
+      // touching Eitan in either direction (target_npc_id is never null
+      // for Eitan, but be defensive).
+      if (!r.source_npc_id && r.target_npc_id) {
+        directlyLinked.add(r.target_npc_id);
+      }
     });
     const inner = npcs.filter((n) => directlyLinked.has(n.id));
     const outer = npcs.filter((n) => !directlyLinked.has(n.id));
@@ -362,7 +371,17 @@ export function MindmapClient({
     }
     nodes.push(...npcNodes);
 
-    const visibleRels = exploreView ? exploreView.visibleRels : relations;
+    const allVisibleRels = exploreView ? exploreView.visibleRels : relations;
+    // Dedupe edges so A↔B is rendered once even if both directions exist.
+    const seenPairs = new Set<string>();
+    const visibleRels = allVisibleRels.filter((r) => {
+      const src = r.source_npc_id ?? "MAIN";
+      const tgt = r.target_npc_id;
+      const pairKey = [src, tgt].sort().join("::");
+      if (seenPairs.has(pairKey)) return false;
+      seenPairs.add(pairKey);
+      return true;
+    });
     const edges: Edge[] = visibleRels.map((r) => ({
       id: r.id,
       source: r.source_npc_id ?? "MAIN",
