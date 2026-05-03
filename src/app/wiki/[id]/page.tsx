@@ -119,6 +119,7 @@ export default async function NpcDetail({
               <Row k="Famille" v={n.family ?? "—"} />
               <Row k="Quartier" v={n.neighborhood ?? "—"} />
               <Row k="Occupation" v={n.occupation ?? "—"} />
+              <Row k="Numéro" v={n.phone_number ?? "—"} />
               {n.twitch_username && (
                 <div className="flex justify-between gap-4 border-b border-border/50 pb-1">
                   <dt className="text-muted">Streamer</dt>

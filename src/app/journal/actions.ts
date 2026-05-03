@@ -34,6 +34,7 @@ export async function createDay(formData: FormData) {
     title: String(formData.get("title") ?? "").trim(),
     summary: (formData.get("summary") as string) || null,
     content: (formData.get("content") as string) || null,
+    vod_url: ((formData.get("vod_url") as string) || "").trim() || null,
     created_by: user.id,
   };
   if (!payload.date || !payload.title)
@@ -77,6 +78,7 @@ export async function updateDay(id: string, formData: FormData) {
     title: String(formData.get("title") ?? "").trim(),
     summary: (formData.get("summary") as string) || null,
     content: (formData.get("content") as string) || null,
+    vod_url: ((formData.get("vod_url") as string) || "").trim() || null,
     updated_at: new Date().toISOString(),
   };
   // If title or day_number changed, regenerate the slug

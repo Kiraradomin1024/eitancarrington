@@ -5,7 +5,7 @@ import { PageTitle } from "@/components/ui";
 import { updateNpc } from "../../actions";
 import { slugOrIdColumn } from "@/lib/slug";
 import { notFound, redirect } from "next/navigation";
-import type { Npc } from "@/lib/types";
+import type { Npc, RelationType } from "@/lib/types";
 
 export default async function EditNpcPage({
   params,
@@ -25,12 +25,38 @@ export default async function EditNpcPage({
   if (!data) notFound();
 
   const npc = data as Npc;
+
+  const { data: npcsRaw } = await supabase
+    .from("npcs")
+    .select("id, name")
+    .neq("id", npc.id)
+    .order("name", { ascending: true });
+  const existingNpcs = (npcsRaw ?? []) as { id: string; name: string }[];
+
+  // Pre-fill relations where this NPC is the source.
+  const { data: relsRaw } = await supabase
+    .from("relations")
+    .select("target_npc_id, type")
+    .eq("source_npc_id", npc.id);
+  const initialRelations: Record<string, RelationType> = {};
+  for (const r of (relsRaw ?? []) as {
+    target_npc_id: string;
+    type: RelationType;
+  }[]) {
+    if (r.target_npc_id) initialRelations[r.target_npc_id] = r.type;
+  }
+
   const update = updateNpc.bind(null, npc.id);
 
   return (
     <div>
       <PageTitle title={`Modifier ${npc.name}`} />
-      <NpcForm initial={npc} action={update} />
+      <NpcForm
+        initial={npc}
+        action={update}
+        existingNpcs={existingNpcs}
+        initialRelations={initialRelations}
+      />
     </div>
   );
 }

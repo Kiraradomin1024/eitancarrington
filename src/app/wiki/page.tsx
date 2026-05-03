@@ -52,6 +52,21 @@ export default async function WikiPage() {
         }
       />
 
+      {/* Legend — explains the dots next to Twitch usernames */}
+      <div className="flex flex-wrap items-center gap-4 mb-4 px-3 py-2 rounded border border-border bg-surface-2 text-xs text-muted">
+        <span className="font-display uppercase tracking-wider text-foreground/80">
+          Légende
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <TwitchLiveDot isLive={true} size={9} />
+          <span>En live sur GTA RP</span>
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <TwitchLiveDot isLive={false} size={9} />
+          <span>Hors ligne / pas en RP</span>
+        </span>
+      </div>
+
       {/* Eitan — main character card */}
       <div className="card card-glow p-5 mb-6 flex gap-4 items-center hover:border-accent/60 transition-colors relative">
         <Link

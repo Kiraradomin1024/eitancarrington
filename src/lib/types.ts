@@ -35,6 +35,7 @@ export type Npc = {
   status: NpcStatus;
   tags: string[];
   twitch_username: string | null;
+  phone_number: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -70,6 +71,7 @@ export type Day = {
   title: string;
   summary: string | null;
   content: string | null;
+  vod_url: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;

@@ -77,6 +77,19 @@ export function DayForm({
           </Field>
         </div>
         <div className="md:col-span-2">
+          <Field
+            label="Rediff du stream"
+            hint="URL du VOD Twitch / YouTube de ce jour"
+          >
+            <input
+              type="url"
+              name="vod_url"
+              defaultValue={initial?.vod_url ?? ""}
+              placeholder="https://www.twitch.tv/videos/…"
+            />
+          </Field>
+        </div>
+        <div className="md:col-span-2">
           <Field label="Récit complet">
             <RichTextEditor
               name="content"

@@ -70,6 +70,25 @@ export default async function DayDetail({
         </p>
       )}
 
+      {day.vod_url && (
+        <a
+          href={day.vod_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded border border-accent/40 bg-accent/10 text-accent hover:bg-accent/20 hover:text-accent-2 text-sm"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            className="w-4 h-4"
+            aria-hidden
+          >
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          Voir la rediff du stream
+        </a>
+      )}
+
       <Card>
         {day.content ? (
           <MarkdownContent content={day.content} />

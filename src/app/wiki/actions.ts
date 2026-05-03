@@ -48,6 +48,8 @@ export async function createNpc(formData: FormData) {
     photo_url: (formData.get("photo_url") as string) || null,
     tags: tagsFromString(formData.get("tags") as string),
     twitch_username: cleanTwitch(formData.get("twitch_username")),
+    phone_number:
+      ((formData.get("phone_number") as string) || "").trim() || null,
     created_by: user.id,
   };
 
@@ -62,6 +64,36 @@ export async function createNpc(formData: FormData) {
     .single();
   if (error) throw new Error(error.message);
 
+  // Collect relation selections (relation_<targetId>=<type>)
+  const relRows: {
+    source_npc_id: string;
+    target_npc_id: string;
+    type: string;
+    intensity: number;
+    description: null;
+    created_by: string;
+  }[] = [];
+  for (const [key, value] of formData.entries()) {
+    if (!key.startsWith("relation_")) continue;
+    const type = String(value || "").trim();
+    if (!type) continue;
+    const targetId = key.slice("relation_".length);
+    if (!targetId || targetId === data.id) continue;
+    relRows.push({
+      source_npc_id: data.id,
+      target_npc_id: targetId,
+      type,
+      intensity: 0,
+      description: null,
+      created_by: user.id,
+    });
+  }
+  if (relRows.length > 0) {
+    await supabase.from("relations").insert(relRows);
+    revalidatePath("/relations");
+    revalidatePath("/mindmap");
+  }
+
   revalidatePath("/wiki");
   redirect(`/wiki/${data.slug ?? data.id}`);
 }
@@ -69,6 +101,10 @@ export async function createNpc(formData: FormData) {
 export async function updateNpc(id: string, formData: FormData) {
   const supabase = await createClient();
   if (!supabase) throw new Error("Not configured");
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Non authentifié");
 
   const payload = {
     name: String(formData.get("name") ?? "").trim(),
@@ -81,6 +117,8 @@ export async function updateNpc(id: string, formData: FormData) {
     photo_url: (formData.get("photo_url") as string) || null,
     tags: tagsFromString(formData.get("tags") as string),
     twitch_username: cleanTwitch(formData.get("twitch_username")),
+    phone_number:
+      ((formData.get("phone_number") as string) || "").trim() || null,
     updated_at: new Date().toISOString(),
   };
   if (!payload.name) throw new Error("Nom requis");
@@ -109,6 +147,41 @@ export async function updateNpc(id: string, formData: FormData) {
     .select("slug")
     .single();
   if (error) throw new Error(error.message);
+
+  // Sync relations where this NPC is the source.
+  // The form only encodes selections for "simple" outgoing relations
+  // (relation_<targetId>=<type>). We delete existing source=id relations
+  // and re-insert from the form selections.
+  const desired = new Map<string, string>();
+  for (const [key, value] of formData.entries()) {
+    if (!key.startsWith("relation_")) continue;
+    const type = String(value || "").trim();
+    if (!type) continue;
+    const targetId = key.slice("relation_".length);
+    if (!targetId || targetId === id) continue;
+    desired.set(targetId, type);
+  }
+  // Only sync if the form actually contained relation_ keys (avoid wiping
+  // relations when an older form without this section is submitted).
+  const formHasRelationFields = Array.from(formData.keys()).some((k) =>
+    k.startsWith("relation_")
+  );
+  if (formHasRelationFields) {
+    await supabase.from("relations").delete().eq("source_npc_id", id);
+    if (desired.size > 0) {
+      const rows = Array.from(desired.entries()).map(([targetId, type]) => ({
+        source_npc_id: id,
+        target_npc_id: targetId,
+        type,
+        intensity: 0,
+        description: null,
+        created_by: user.id,
+      }));
+      await supabase.from("relations").insert(rows);
+    }
+    revalidatePath("/relations");
+    revalidatePath("/mindmap");
+  }
 
   const target = data.slug ?? id;
   revalidatePath("/wiki");
