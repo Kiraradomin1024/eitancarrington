@@ -30,6 +30,8 @@ const TYPE_COLOR: Record<string, string> = {
   contact: "#9c95ad",
   rival: "#d4a04e",
   mentor: "#c084fc",
+  neighbor: "#a8b1c7",
+  colleague: "#4fb3a3",
   other: "#9c95ad",
 };
 
