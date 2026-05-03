@@ -31,7 +31,16 @@ export default async function EditNpcPage({
     .select("id, name")
     .neq("id", npc.id)
     .order("name", { ascending: true });
-  const existingNpcs = (npcsRaw ?? []) as { id: string; name: string }[];
+  // Fetch main character name to include in the relations picker
+  const { data: mainChar } = await supabase
+    .from("character")
+    .select("name")
+    .eq("is_main", true)
+    .maybeSingle();
+  const existingNpcs: { id: string; name: string }[] = [
+    { id: "__EITAN__", name: mainChar?.name ?? "Eitan Carrington" },
+    ...((npcsRaw ?? []) as { id: string; name: string }[]),
+  ];
 
   // Pre-fill relations involving this NPC in either direction.
   const { data: relsRaw } = await supabase
@@ -46,7 +55,8 @@ export default async function EditNpcPage({
   }[]) {
     const otherId =
       r.source_npc_id === npc.id ? r.target_npc_id : r.source_npc_id;
-    if (otherId) initialRelations[otherId] = r.type;
+    // null source/target means the main character (Eitan)
+    initialRelations[otherId ?? "__EITAN__"] = r.type;
   }
 
   const update = updateNpc.bind(null, npc.id);

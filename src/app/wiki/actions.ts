@@ -65,8 +65,9 @@ export async function createNpc(formData: FormData) {
   if (error) throw new Error(error.message);
 
   // Collect relation selections (relation_<targetId>=<type>)
+  // __EITAN__ sentinel = main character (source_npc_id = null)
   const relRows: {
-    source_npc_id: string;
+    source_npc_id: string | null;
     target_npc_id: string;
     type: string;
     intensity: number;
@@ -79,14 +80,26 @@ export async function createNpc(formData: FormData) {
     if (!type) continue;
     const targetId = key.slice("relation_".length);
     if (!targetId || targetId === data.id) continue;
-    relRows.push({
-      source_npc_id: data.id,
-      target_npc_id: targetId,
-      type,
-      intensity: 0,
-      description: null,
-      created_by: user.id,
-    });
+    if (targetId === "__EITAN__") {
+      // Eitan → this NPC (source_npc_id null = main character)
+      relRows.push({
+        source_npc_id: null,
+        target_npc_id: data.id,
+        type,
+        intensity: 0,
+        description: null,
+        created_by: user.id,
+      });
+    } else {
+      relRows.push({
+        source_npc_id: data.id,
+        target_npc_id: targetId,
+        type,
+        intensity: 0,
+        description: null,
+        created_by: user.id,
+      });
+    }
   }
   if (relRows.length > 0) {
     const { error: relErr } = await supabase.from("relations").insert(relRows);
@@ -169,57 +182,52 @@ export async function updateNpc(id: string, formData: FormData) {
   );
   if (formHasRelationFields) {
     if (desired.size > 0) {
-      const rows = Array.from(desired.entries()).map(([targetId, type]) => ({
-        source_npc_id: id,
-        target_npc_id: targetId,
-        type,
-        intensity: 0,
-        description: null,
-        created_by: user.id,
-      }));
+      // __EITAN__ sentinel = main character (source_npc_id = null)
+      const rows = Array.from(desired.entries()).map(([targetId, type]) => {
+        if (targetId === "__EITAN__") {
+          return {
+            source_npc_id: null as string | null,
+            target_npc_id: id,
+            type,
+            intensity: 0,
+            description: null,
+            created_by: user.id,
+          };
+        }
+        return {
+          source_npc_id: id as string | null,
+          target_npc_id: targetId,
+          type,
+          intensity: 0,
+          description: null,
+          created_by: user.id,
+        };
+      });
 
       // Insert new relations first — if this fails (e.g. invalid type),
       // we bail out WITHOUT having deleted the old ones.
-      const { error: insertErr } = await supabase
+      const { data: inserted, error: insertErr } = await supabase
         .from("relations")
-        .insert(rows);
+        .insert(rows)
+        .select("id");
       if (insertErr) throw new Error(`Relations insert failed: ${insertErr.message}`);
 
-      // Insert succeeded — now delete the OLD rows that are not in the new set.
-      // Old rows are those involving this NPC that were NOT just inserted.
-      // Since we inserted duplicates, clean up by removing all pre-existing
-      // rows for this NPC and keeping only the freshly inserted ones.
-      // Simplest correct approach: delete rows where this NPC is involved
-      // that are NOT in the desired set.
-      const desiredTargets = Array.from(desired.keys());
-      // Delete outgoing relations to targets NOT in the new set
-      const { error: delOldOut } = await supabase
-        .from("relations")
-        .delete()
-        .eq("source_npc_id", id)
-        .not("target_npc_id", "in", `(${desiredTargets.join(",")})`);
-      if (delOldOut) throw new Error(`Relations cleanup failed: ${delOldOut.message}`);
-      // Delete incoming relations from this NPC (direction flip)
-      await supabase
-        .from("relations")
-        .delete()
-        .eq("target_npc_id", id);
-      // Remove duplicate rows: keep only the newest per (source, target) pair
-      // by deleting older duplicates.
-      for (const targetId of desiredTargets) {
-        const { data: dups } = await supabase
+      // Insert succeeded — delete all OLD relations involving this NPC,
+      // keeping only the freshly inserted rows.
+      const keepIds = (inserted ?? []).map((r) => r.id);
+      if (keepIds.length > 0) {
+        // Delete outgoing relations not in keepIds
+        await supabase
           .from("relations")
-          .select("id, created_at")
+          .delete()
           .eq("source_npc_id", id)
-          .eq("target_npc_id", targetId)
-          .order("created_at", { ascending: false });
-        if (dups && dups.length > 1) {
-          const idsToDelete = dups.slice(1).map((r) => r.id);
-          await supabase
-            .from("relations")
-            .delete()
-            .in("id", idsToDelete);
-        }
+          .not("id", "in", `(${keepIds.join(",")})`);
+        // Delete incoming relations not in keepIds
+        await supabase
+          .from("relations")
+          .delete()
+          .eq("target_npc_id", id)
+          .not("id", "in", `(${keepIds.join(",")})`);
       }
     } else {
       // The form had relation fields but none selected — clear all relations

@@ -16,7 +16,18 @@ export default async function NewNpcPage() {
         .select("id, name")
         .order("name", { ascending: true })
     : { data: [] };
-  const existingNpcs = (npcsRaw ?? []) as { id: string; name: string }[];
+  // Fetch main character name to include in the relations picker
+  const { data: mainChar } = supabase
+    ? await supabase
+        .from("character")
+        .select("name")
+        .eq("is_main", true)
+        .maybeSingle()
+    : { data: null };
+  const existingNpcs: { id: string; name: string }[] = [
+    { id: "__EITAN__", name: mainChar?.name ?? "Eitan Carrington" },
+    ...((npcsRaw ?? []) as { id: string; name: string }[]),
+  ];
 
   return (
     <div>
