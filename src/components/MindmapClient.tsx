@@ -93,10 +93,10 @@ const NpcNode = memo(function NpcNode({ data }: { data: NpcNodeData }) {
       <Handle type="source" position={Position.Bottom} className="!bg-transparent !border-0 !w-0 !h-0" />
 
       {/* Photo */}
-      <div className="npc-node__photo">
+      <div className="npc-node__photo" data-no-lightbox="">
         {data.photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={data.photoUrl} alt={data.name} />
+          <img src={data.photoUrl} alt={data.name} data-no-lightbox="" />
         ) : (
           <span className="npc-node__initial">{data.name[0]}</span>
         )}
@@ -165,10 +165,10 @@ const MainNode = memo(function MainNode({ data }: { data: MainNodeData }) {
       <Handle type="target" position={Position.Top} className="!bg-transparent !border-0 !w-0 !h-0" />
       <Handle type="source" position={Position.Bottom} className="!bg-transparent !border-0 !w-0 !h-0" />
 
-      <div className="main-node__photo">
+      <div className="main-node__photo" data-no-lightbox="">
         {data.photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={data.photoUrl} alt={data.name} />
+          <img src={data.photoUrl} alt={data.name} data-no-lightbox="" />
         ) : (
           <span className="main-node__initial">{data.name[0]}</span>
         )}
@@ -482,7 +482,7 @@ export function MindmapClient({
       : `/wiki/${focusedNpc?.slug ?? focusId}`;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" data-no-lightbox="">
       {/* Mode tabs */}
       <div className="flex items-center gap-1 card !p-1 w-fit">
         {(["full", "explore"] as const).map((m) => (
