@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { SetupNotice } from "@/components/SetupNotice";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { ImageLightbox } from "@/components/ImageLightbox";
 import { SITE_NAME, SITE_URL } from "@/lib/seo";
 
 const inter = Inter({
@@ -124,6 +125,7 @@ export default async function RootLayout({
             <span className="mx-2">·</span>
             journal tenu par les proches d&apos;Eitan
           </footer>
+          <ImageLightbox />
         </ThemeProvider>
       </body>
     </html>
