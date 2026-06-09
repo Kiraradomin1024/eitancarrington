@@ -1,0 +1,344 @@
+import { createClient } from "@/lib/supabase/server";
+import { canContribute, getCurrentUserAndRole } from "@/lib/auth";
+import { Badge, Card, LinkButton, PageTitle } from "@/components/ui";
+import { MarkdownContent, extractHeadings } from "@/components/MarkdownContent";
+import type { Npc, Relation } from "@/lib/types";
+import { RELATION_LABELS, STATUS_LABELS } from "@/lib/types";
+import { getLiveStatuses } from "@/lib/twitch";
+import { TwitchLiveDot } from "@/components/TwitchLiveDot";
+import { TwitchEmbed } from "@/components/TwitchEmbed";
+import { slugOrIdColumn } from "@/lib/slug";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { DeleteButton } from "@/components/DeleteButton";
+import { deleteNpc } from "../actions";
+import { getHackingMode } from "@/lib/hacking";
+import { DossierAccess } from "@/components/DossierAccess";
+import type { Metadata } from "next";
+import { truncateForMeta } from "@/lib/seo";
+import { HistoryPanel } from "@/components/HistoryPanel";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  if (!supabase) return {};
+  const { data } = await supabase
+    .from("npcs")
+    .select("name, description, occupation, family, photo_url")
+    .eq(slugOrIdColumn(id), id)
+    .maybeSingle();
+  if (!data) return { title: "Personnage introuvable" };
+  const npc = data as Pick<
+    Npc,
+    "name" | "description" | "occupation" | "family" | "photo_url"
+  >;
+  const subtitle = npc.occupation ?? npc.family ?? null;
+  const description =
+    truncateForMeta(npc.description) ??
+    (subtitle
+      ? `${npc.name} — ${subtitle}. Fiche du wiki d'Eitan Carrington.`
+      : `Fiche de ${npc.name} dans le wiki d'Eitan Carrington.`);
+  const images = npc.photo_url ? [{ url: npc.photo_url, alt: npc.name }] : undefined;
+  return {
+    title: npc.name,
+    description,
+    openGraph: {
+      title: npc.name,
+      description,
+      type: "profile",
+      images,
+    },
+    twitter: {
+      card: images ? "summary_large_image" : "summary",
+      title: npc.name,
+      description,
+      images: images?.map((i) => i.url),
+    },
+  };
+}
+
+export default async function NpcDetail({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const supabase = await createClient();
+  if (!supabase) return null;
+  const { role } = await getCurrentUserAndRole();
+  const canEdit = canContribute(role);
+
+  const { data: npc } = await supabase
+    .from("npcs")
+    .select("*")
+    .eq(slugOrIdColumn(id), id)
+    .maybeSingle();
+
+  if (!npc) notFound();
+  const n = npc as Npc;
+
+  // Relations always join via the row's UUID
+  const { data: relsRaw } = await supabase
+    .from("relations")
+    .select("*")
+    .or(`source_npc_id.eq.${n.id},target_npc_id.eq.${n.id}`);
+  const rels = (relsRaw ?? []) as Relation[];
+
+  const otherIds = Array.from(
+    new Set(
+      rels
+        .flatMap((r) => [r.source_npc_id, r.target_npc_id])
+        .filter((x): x is string => !!x && x !== n.id)
+    )
+  );
+  const { data: othersRaw } = otherIds.length
+    ? await supabase.from("npcs").select("id, name, slug").in("id", otherIds)
+    : { data: [] };
+  const otherMap = new Map(
+    (othersRaw ?? []).map(
+      (o: { id: string; name: string; slug: string | null }) => [
+        o.id,
+        { name: o.name, slug: o.slug },
+      ]
+    )
+  );
+
+  // Extract table of contents from description
+  const headings = n.description ? extractHeadings(n.description) : [];
+
+  // Twitch live status (cached 60s server-side)
+  const liveSet = n.twitch_username
+    ? await getLiveStatuses([n.twitch_username])
+    : new Set<string>();
+  const isLive = n.twitch_username
+    ? liveSet.has(n.twitch_username.toLowerCase())
+    : false;
+
+  // SC292 dossier-access effects
+  const hacking = await getHackingMode();
+  const dossier: "target" | "closed" | null = /diego\s*suarez|eitan/i.test(
+    n.name
+  )
+    ? "target"
+    : n.status === "dead"
+      ? "closed"
+      : null;
+
+  return (
+    <div>
+      <DossierAccess on={hacking} fileName={n.name} dossier={dossier} />
+      <PageTitle
+        title={n.name}
+        subtitle={n.occupation ?? n.family ?? undefined}
+        action={
+          canEdit && (
+            <div className="flex gap-2">
+              <LinkButton
+                href={`/wiki/${n.slug ?? n.id}/edit`}
+                variant="ghost"
+              >
+                Modifier
+              </LinkButton>
+              <DeleteButton
+                action={async () => {
+                  "use server";
+                  await deleteNpc(n.id);
+                }}
+                label="Supprimer"
+              />
+            </div>
+          )
+        }
+      />
+
+      <div className="grid md:grid-cols-3 gap-6">
+        {/* Sidebar — photo, infos, TOC */}
+        <div className="md:col-span-1 space-y-4">
+          <Card>
+            <div
+              className={
+                "relative w-full aspect-square rounded mb-4 border border-border overflow-hidden " +
+                (n.status === "dead" ? "memorial" : "")
+              }
+            >
+              {n.photo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={n.photo_url}
+                  alt={n.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-surface-2 flex items-center justify-center font-serif text-accent text-7xl">
+                  {n.name[0]}
+                </div>
+              )}
+            </div>
+            {n.status === "dead" && (
+              <p className="text-center text-xs uppercase tracking-[0.2em] text-muted -mt-2 mb-4">
+                · En mémoire ·
+              </p>
+            )}
+            <dl className="text-sm space-y-2">
+              <Row k="Statut" v={STATUS_LABELS[n.status]} />
+
+              <Row k="Famille" v={n.family ?? "—"} />
+              <Row k="Quartier" v={n.neighborhood ?? "—"} />
+              <Row k="Occupation" v={n.occupation ?? "—"} />
+              <Row k="Numéro" v={n.phone_number ?? "—"} />
+              {n.twitch_username && (
+                <div className="flex justify-between gap-4 border-b border-border/50 pb-1">
+                  <dt className="text-muted">Streamer</dt>
+                  <dd className="min-w-0">
+                    <a
+                      href={`https://www.twitch.tv/${n.twitch_username}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-accent hover:text-accent-2 hover:underline whitespace-nowrap max-w-full"
+                      title={
+                        isLive
+                          ? `${n.twitch_username} est en live !`
+                          : `Voir la chaîne de ${n.twitch_username}`
+                      }
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="w-4 h-4 shrink-0"
+                        aria-hidden
+                      >
+                        <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z" />
+                      </svg>
+                      <span className="truncate">{n.twitch_username}</span>
+                      <TwitchLiveDot isLive={isLive} size={9} />
+                      {isLive && (
+                        <span className="text-[10px] uppercase tracking-wider text-green-600 dark:text-green-400 font-bold">
+                          Live
+                        </span>
+                      )}
+                    </a>
+                  </dd>
+                </div>
+              )}
+            </dl>
+            {n.tags.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-1.5">
+                {n.tags.map((t) => (
+                  <Badge key={t} tone="neutral">
+                    {t}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          {/* Table of contents */}
+          {headings.length > 0 && (
+            <Card>
+              <h3 className="font-display text-sm uppercase tracking-wider text-muted mb-3">
+                Sommaire
+              </h3>
+              <nav className="space-y-1">
+                {headings.map((h, i) => (
+                  <a
+                    key={i}
+                    href={`#${h.id}`}
+                    className="block text-sm text-muted hover:text-accent transition-colors link-fancy"
+                    style={{ paddingLeft: `${(h.level - 2) * 12}px` }}
+                  >
+                    {h.text}
+                  </a>
+                ))}
+              </nav>
+            </Card>
+          )}
+        </div>
+
+        {/* Main content */}
+        <div className="md:col-span-2 space-y-6">
+          <Card>
+            <h2 className="font-display text-2xl text-accent mb-3 title-rule">
+              Description
+            </h2>
+            {n.description ? (
+              <div className="hk-redact-zone">
+                <MarkdownContent content={n.description} />
+              </div>
+            ) : (
+              <p className="text-muted italic">Aucune description.</p>
+            )}
+          </Card>
+
+          <Card>
+            <h2 className="font-display text-2xl text-accent mb-3 title-rule">
+              Liens ({rels.length})
+            </h2>
+            {rels.length === 0 ? (
+              <p className="text-muted italic">Aucune relation enregistrée.</p>
+            ) : (
+              <ul className="space-y-2">
+                {rels.map((r) => {
+                  const isSource = r.source_npc_id === n.id;
+                  const otherId = isSource ? r.target_npc_id : r.source_npc_id;
+                  const otherInfo = otherId ? otherMap.get(otherId) : null;
+                  const otherName = otherInfo?.name ?? "Inconnu";
+                  const otherHref = otherInfo
+                    ? `/wiki/${otherInfo.slug ?? otherId}`
+                    : null;
+                  return (
+                    <li
+                      key={r.id}
+                      className="flex items-center gap-3 p-2 rounded hover:bg-surface-2"
+                    >
+                      <Badge tone="accent">{RELATION_LABELS[r.type]}</Badge>
+                      {otherHref ? (
+                        <Link
+                          href={otherHref}
+                          className="text-foreground hover:text-foreground"
+                        >
+                          {otherName}
+                        </Link>
+                      ) : (
+                        <Link
+                          href="/wiki/eitan"
+                          className="text-foreground hover:underline"
+                        >
+                          Eitan
+                        </Link>
+                      )}
+                      {r.description && (
+                        <span className="text-muted text-sm italic ml-2">
+                          — {r.description}
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Card>
+
+          {/* Twitch live embed */}
+          {isLive && n.twitch_username && (
+            <TwitchEmbed channel={n.twitch_username} />
+          )}
+
+          <HistoryPanel entityType="npcs" entityId={n.id} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Row({ k, v }: { k: string; v: string }) {
+  return (
+    <div className="flex justify-between gap-4 border-b border-border/50 pb-1">
+      <dt className="text-muted">{k}</dt>
+      <dd className="text-foreground text-right">{v}</dd>
+    </div>
+  );
+}
