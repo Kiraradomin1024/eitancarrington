@@ -138,7 +138,7 @@ export function HackingMode({
         window.location.reload();
       }
     }
-    const id = setInterval(check, 20000);
+    const id = setInterval(check, 60000);
     return () => {
       cancelled = true;
       clearInterval(id);

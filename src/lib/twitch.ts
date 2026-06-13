@@ -12,6 +12,7 @@
  */
 
 import "server-only";
+import { unstable_cache } from "next/cache";
 
 /**
  * Twitch game_id for "Grand Theft Auto V". A streamer is considered "live for
@@ -19,14 +20,15 @@ import "server-only";
  */
 const GTA_V_GAME_ID = "32982";
 
+/** How long a live-status snapshot is reused across ALL requests (seconds). */
+const STATUS_REVALIDATE = 90;
+
 type TokenCache = {
   token: string;
   expiresAt: number;
 };
 
 let tokenCache: TokenCache | null = null;
-let statusCache: { ts: number; live: Set<string>; users: string } | null = null;
-const STATUS_TTL_MS = 60_000; // 1 minute
 
 async function getAppToken(): Promise<string | null> {
   const id = process.env.TWITCH_CLIENT_ID;
@@ -58,7 +60,55 @@ async function getAppToken(): Promise<string | null> {
 }
 
 /**
- * Returns a Set of lowercase usernames that are currently streaming.
+ * Network call to Twitch, wrapped in Next's persistent data cache so the
+ * result is SHARED across every request/instance and only refreshed every
+ * STATUS_REVALIDATE seconds — even under heavy traffic, Twitch is hit ~once
+ * per cycle instead of once per page render.
+ *
+ * `key` is the sorted, comma-joined username list (also the cache key).
+ * Returns an array (Set isn't serializable for the cache).
+ */
+const fetchLiveArray = unstable_cache(
+  async (key: string): Promise<string[]> => {
+    const cleaned = key ? key.split(",") : [];
+    if (cleaned.length === 0) return [];
+
+    const id = process.env.TWITCH_CLIENT_ID;
+    const token = await getAppToken();
+    if (!id || !token) return [];
+
+    // Helix accepts up to 100 user_login per request — chunk if more
+    const live: string[] = [];
+    for (let i = 0; i < cleaned.length; i += 100) {
+      const chunk = cleaned.slice(i, i + 100);
+      const params = new URLSearchParams();
+      for (const u of chunk) params.append("user_login", u);
+      const res = await fetch(
+        `https://api.twitch.tv/helix/streams?${params.toString()}`,
+        {
+          headers: { "Client-Id": id, Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        }
+      );
+      if (!res.ok) continue;
+      const data = (await res.json()) as {
+        data: { user_login: string; game_id: string }[];
+      };
+      for (const s of data.data) {
+        if (s.game_id === GTA_V_GAME_ID) {
+          live.push(s.user_login.toLowerCase());
+        }
+      }
+    }
+    return live;
+  },
+  ["twitch-live-statuses"],
+  { revalidate: STATUS_REVALIDATE, tags: ["twitch-live"] }
+);
+
+/**
+ * Returns a Set of lowercase usernames currently streaming GTA V.
+ * Cached across all requests for ~STATUS_REVALIDATE seconds.
  * Returns an empty Set if Twitch is not configured or fails.
  */
 export async function getLiveStatuses(
@@ -71,51 +121,9 @@ export async function getLiveStatuses(
         .map((u) => u.trim().toLowerCase())
         .filter(Boolean)
     )
-  );
+  ).sort();
   if (cleaned.length === 0) return new Set();
 
-  // Cache key based on the sorted username list
-  const key = cleaned.sort().join(",");
-  if (
-    statusCache &&
-    statusCache.users === key &&
-    Date.now() - statusCache.ts < STATUS_TTL_MS
-  ) {
-    return statusCache.live;
-  }
-
-  const id = process.env.TWITCH_CLIENT_ID;
-  const token = await getAppToken();
-  if (!id || !token) return new Set();
-
-  // Helix accepts up to 100 user_login per request — chunk if more
-  const live = new Set<string>();
-  for (let i = 0; i < cleaned.length; i += 100) {
-    const chunk = cleaned.slice(i, i + 100);
-    const params = new URLSearchParams();
-    for (const u of chunk) params.append("user_login", u);
-    const res = await fetch(
-      `https://api.twitch.tv/helix/streams?${params.toString()}`,
-      {
-        headers: {
-          "Client-Id": id,
-          Authorization: `Bearer ${token}`,
-        },
-        cache: "no-store",
-      }
-    );
-    if (!res.ok) continue;
-    const data = (await res.json()) as {
-      data: { user_login: string; game_id: string }[];
-    };
-    for (const s of data.data) {
-      // Only mark as "live" if currently streaming GTA V
-      if (s.game_id === GTA_V_GAME_ID) {
-        live.add(s.user_login.toLowerCase());
-      }
-    }
-  }
-
-  statusCache = { ts: Date.now(), live, users: key };
-  return live;
+  const live = await fetchLiveArray(cleaned.join(","));
+  return new Set(live);
 }

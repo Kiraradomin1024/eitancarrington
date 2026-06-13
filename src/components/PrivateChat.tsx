@@ -174,7 +174,7 @@ export function PrivateChat({
         .order("created_at", { ascending: false })
         .limit(30);
       if (active && data) merge((data as Msg[]).slice().reverse());
-    }, 6000);
+    }, 20000);
 
     return () => {
       active = false;
