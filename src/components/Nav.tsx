@@ -45,7 +45,7 @@ export function Nav({
               <img
                 src={eitanPhotoUrl}
                 alt="Eitan"
-                className="w-[38px] h-[38px] object-cover border border-border-strong grayscale group-hover:grayscale-0 transition-all"
+                className="w-[38px] h-[38px] object-cover border border-border-strong"
                 data-no-lightbox=""
               />
             ) : (
@@ -53,16 +53,11 @@ export function Nav({
                 E
               </span>
             )}
-            <span className="flex flex-col leading-[1.15]">
-              <span
-                className="site-glitch font-display text-base text-foreground tracking-tight whitespace-nowrap"
-                data-text="Journal d'Eitan"
-              >
-                Journal d&apos;Eitan
-              </span>
-              <span className="text-[10px] uppercase tracking-[0.26em] text-muted">
-                Dossier EC-021
-              </span>
+            <span
+              className="site-glitch font-display text-base text-foreground tracking-tight whitespace-nowrap"
+              data-text="Journal d'Eitan"
+            >
+              Journal d&apos;Eitan
             </span>
           </Link>
 

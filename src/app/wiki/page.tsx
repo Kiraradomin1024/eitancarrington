@@ -155,7 +155,7 @@ export default async function WikiPage() {
                       <img
                         src={n.photo_url}
                         alt={n.name}
-                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                        className="w-full h-full object-cover"
                       />
                     ) : (
                       <span className="w-full h-full bg-surface-2 flex items-center justify-center meta-label">
