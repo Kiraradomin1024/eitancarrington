@@ -372,7 +372,7 @@ export function RichTextEditor({
           {ORDER.map((group, gi) => (
             <div
               key={gi}
-              className="flex items-center gap-0.5 p-0.5 rounded-lg border border-border bg-surface"
+              className="flex items-center gap-0.5 p-0.5 rounded-none border border-border bg-surface"
             >
               {group.map((key) => {
                 const fmt = FORMATS[key];
@@ -421,7 +421,7 @@ export function RichTextEditor({
               fileRef.current?.click();
             }}
             disabled={uploading}
-            className="inline-flex items-center gap-1.5 px-2.5 h-8 rounded-lg text-xs font-medium
+            className="inline-flex items-center gap-1.5 px-2.5 h-8 rounded-none text-xs font-medium
                      border border-border bg-surface hover:bg-accent-soft hover:border-accent/40
                      text-muted hover:text-foreground transition-all disabled:opacity-50"
             title="Insérer une image"

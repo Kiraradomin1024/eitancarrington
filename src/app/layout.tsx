@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Caveat, Fraunces, Inter } from "next/font/google";
+import { Caveat, Fraunces, Inter, Oswald, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { createClient } from "@/lib/supabase/server";
@@ -30,6 +30,21 @@ const caveat = Caveat({
   variable: "--font-caveat",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
+  display: "swap",
+});
+
+/* Utilisées par le mode intrusion SC292 */
+const oswald = Oswald({
+  variable: "--font-oswald",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  display: "swap",
+});
+
+const jetbrains = JetBrains_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+  weight: ["300", "400", "600"],
   display: "swap",
 });
 
@@ -123,7 +138,7 @@ export default async function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${inter.variable} ${fraunces.variable} ${caveat.variable}`}
+      className={`${inter.variable} ${fraunces.variable} ${caveat.variable} ${oswald.variable} ${jetbrains.variable}`}
       suppressHydrationWarning
     >
       <head>

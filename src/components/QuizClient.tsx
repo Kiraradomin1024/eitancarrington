@@ -195,7 +195,7 @@ export function QuizClient({
             <button
               type="button"
               onClick={() => setAdminPanel(true)}
-              className="w-full px-3 py-2 rounded-full text-sm border border-border text-foreground hover:bg-accent-soft hover:text-accent transition-colors"
+              className="w-full px-3 py-2.5 text-[11px] uppercase tracking-[0.2em] border border-border text-muted hover:border-accent/60 hover:text-accent transition-colors"
             >
               ⚙️ Gérer les questions
             </button>
@@ -288,7 +288,7 @@ function IntroScreen({
       </p>
 
       {previousTotal > 0 && (
-        <div className="inline-flex items-center gap-3 text-xs text-muted bg-surface-2 rounded-full px-4 py-1.5">
+        <div className="inline-flex items-center gap-3 text-xs text-muted border border-border px-4 py-2">
           <span>
             Déjà joué :{" "}
             <strong className="text-foreground">
@@ -310,7 +310,7 @@ function IntroScreen({
           type="button"
           onClick={onStart}
           disabled={remaining === 0}
-          className="px-8 py-3 rounded-full text-base font-medium bg-gradient-to-r from-accent via-accent-2 to-accent-3 text-white shadow-lg hover:shadow-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          className="px-9 py-4 text-[11px] uppercase tracking-[0.22em] border border-accent text-accent hover:bg-accent hover:text-background transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {remaining === 0
             ? "Tu as tout répondu 🏆"
@@ -343,51 +343,46 @@ function QuestionCard({
   const locked = !!revealedCorrect;
   const progress = ((indexInOrder + (locked ? 1 : 0)) / orderTotal) * 100;
   return (
-    <div className="card p-6 md:p-8 space-y-5 quiz-card-in">
+    <div className="quiz-card-in space-y-7">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 text-xs">
-        <span className="uppercase tracking-wider text-muted">
+      <div className="flex items-center justify-between gap-3">
+        <span className="meta-label">
           Question {indexInOrder + 1} <span className="opacity-50">/ {orderTotal}</span>
         </span>
         {question.category && (
-          <span className="px-2 py-0.5 rounded-full bg-accent-soft text-accent text-[10px] uppercase tracking-wider">
+          <span className="text-[10px] uppercase tracking-[0.2em] text-accent border border-accent/40 px-2.5 py-1">
             {question.category}
           </span>
         )}
       </div>
 
       {/* Progress bar */}
-      <div className="h-1 rounded-full bg-surface-2 overflow-hidden">
+      <div className="h-0.5 bg-border overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-accent via-accent-2 to-accent-3 transition-all duration-500"
+          className="h-full bg-accent transition-all duration-500"
           style={{ width: `${progress}%` }}
         />
       </div>
 
       {/* Question */}
-      <h2 className="font-display text-2xl md:text-3xl text-foreground leading-snug">
+      <h2 className="font-display font-light text-3xl md:text-4xl text-foreground leading-[1.2]">
         {question.question}
       </h2>
 
       {/* Options */}
-      <div className="grid sm:grid-cols-2 gap-2.5">
+      <div className="hairline-grid sm:grid-cols-2">
         {OPTIONS.map((opt) => {
           const text = question[`option_${opt}` as const];
           const isChosen = chosen === opt;
           const isCorrect = revealedCorrect === opt;
           const isWrongChosen = isChosen && revealedCorrect && !isCorrect;
-          let tone =
-            "border-border hover:border-accent/60 hover:bg-accent-soft text-foreground";
+          let tone = "text-foreground hover:bg-surface-2";
           if (locked) {
-            if (isCorrect) {
-              tone = "border-success/70 bg-success/15 text-foreground";
-            } else if (isWrongChosen) {
-              tone = "border-danger/70 bg-danger/15 text-foreground";
-            } else {
-              tone = "border-border bg-surface-2 text-muted opacity-60";
-            }
+            if (isCorrect) tone = "text-success bg-success/10";
+            else if (isWrongChosen) tone = "text-danger bg-danger/10";
+            else tone = "text-muted opacity-55";
           } else if (isChosen) {
-            tone = "border-accent bg-accent-soft text-accent";
+            tone = "text-accent bg-accent-soft";
           }
           return (
             <button
@@ -396,30 +391,30 @@ function QuestionCard({
               disabled={disabled}
               onClick={() => onChoose(opt)}
               className={
-                "group relative text-left px-4 py-3 rounded-xl border-2 transition-all flex items-center gap-3 disabled:cursor-default " +
+                "group relative text-left px-6 py-5 transition-colors flex items-center gap-5 disabled:cursor-default " +
                 tone
               }
             >
               <span
                 className={
-                  "w-8 h-8 shrink-0 rounded-full text-sm font-semibold flex items-center justify-center transition-colors " +
+                  "font-display text-base shrink-0 w-4 transition-colors " +
                   (locked && isCorrect
-                    ? "bg-success text-white"
+                    ? "text-success"
                     : locked && isWrongChosen
-                      ? "bg-danger text-white"
+                      ? "text-danger"
                       : isChosen
-                        ? "bg-accent text-white"
-                        : "bg-surface-2 text-muted group-hover:bg-accent group-hover:text-white")
+                        ? "text-accent"
+                        : "text-muted group-hover:text-accent")
                 }
               >
                 {OPTION_LABEL[opt]}
               </span>
-              <span className="flex-1 text-sm md:text-base leading-snug">{text}</span>
+              <span className="flex-1 text-base leading-snug">{text}</span>
               {locked && isCorrect && (
-                <span className="text-success text-xl shrink-0">✓</span>
+                <span className="text-success shrink-0">✓</span>
               )}
               {locked && isWrongChosen && (
-                <span className="text-danger text-xl shrink-0">✕</span>
+                <span className="text-danger shrink-0">✕</span>
               )}
             </button>
           );
@@ -467,7 +462,7 @@ function FeedbackBar({
       <div className="flex items-center gap-3">
         <span
           className={
-            "w-10 h-10 rounded-full flex items-center justify-center text-white text-xl " +
+            "w-10 h-10 flex items-center justify-center text-background text-xl " +
             (wasCorrect ? "bg-success" : "bg-danger")
           }
         >
@@ -491,7 +486,7 @@ function FeedbackBar({
         ref={btnRef}
         type="button"
         onClick={onNext}
-        className="px-5 py-2 rounded-full text-sm font-medium bg-foreground text-background hover:opacity-90 shadow-sm transition-all"
+        className="px-6 py-3 text-[11px] uppercase tracking-[0.22em] border border-accent text-accent hover:bg-accent hover:text-background transition-colors"
       >
         {isLast ? "Voir le score →" : "Suivante →"}
       </button>
@@ -560,7 +555,7 @@ function DoneScreen({
         <button
           type="button"
           onClick={onRestart}
-          className="px-6 py-2 rounded-full text-sm font-medium border border-border text-foreground hover:bg-accent-soft hover:text-accent transition-colors"
+          className="px-6 py-3 text-[11px] uppercase tracking-[0.22em] border border-border text-muted hover:border-accent/60 hover:text-accent transition-colors"
         >
           Retour au menu
         </button>
@@ -637,7 +632,7 @@ function LeaderboardRowItem({
   return (
     <li
       className={
-        "flex items-center gap-2 px-2 py-1.5 rounded-lg " +
+        "flex items-center gap-2 px-2 py-1.5 rounded-none " +
         (isMe ? "bg-accent-soft" : "")
       }
     >
@@ -696,7 +691,7 @@ function AdminPanel({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface border border-border rounded-2xl shadow-2xl w-full max-w-2xl p-6 space-y-4 max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-surface border border-border rounded-none shadow-2xl w-full max-w-2xl p-6 space-y-4 max-h-[90vh] overflow-hidden flex flex-col"
       >
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-display text-2xl text-foreground">
@@ -705,7 +700,7 @@ function AdminPanel({
           <button
             type="button"
             onClick={onAdd}
-            className="px-3 py-1.5 rounded-full text-sm bg-accent text-white hover:opacity-90"
+            className="px-4 py-2 text-[11px] uppercase tracking-[0.2em] border border-accent text-accent hover:bg-accent hover:text-background transition-colors"
           >
             + Nouvelle
           </button>
@@ -717,12 +712,12 @@ function AdminPanel({
             {questions.map((q) => (
               <li
                 key={q.id}
-                className="border border-border rounded-xl px-3 py-2 flex items-start gap-3 hover:bg-surface-2 transition-colors"
+                className="border border-border rounded-none px-3 py-2 flex items-start gap-3 hover:bg-surface-2 transition-colors"
               >
                 <div className="flex-1 min-w-0">
                   <div className="text-xs uppercase tracking-wider text-muted mb-0.5 flex items-center gap-2">
                     {q.category && (
-                      <span className="px-2 py-0.5 rounded-full bg-accent-soft text-accent text-[10px]">
+                      <span className="px-2 py-0.5 border border-accent/40 text-accent text-[10px] uppercase tracking-[0.16em]">
                         {q.category}
                       </span>
                     )}
@@ -804,7 +799,7 @@ function QuestionForm({
       <form
         onSubmit={onSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface border border-border rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+        className="bg-surface border border-border rounded-none shadow-2xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto"
       >
         <h2 className="font-display text-2xl text-foreground">
           {isEdit ? "Modifier la question" : "Nouvelle question"}
@@ -865,7 +860,7 @@ function QuestionForm({
         </div>
 
         {error && (
-          <p className="text-sm text-danger bg-danger/10 border border-danger/30 rounded-lg px-3 py-2">
+          <p className="text-sm text-danger bg-danger/10 border border-danger/30 rounded-none px-3 py-2">
             {error}
           </p>
         )}

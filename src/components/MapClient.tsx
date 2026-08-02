@@ -416,32 +416,32 @@ export function MapClient({
               type="button"
               onClick={() => setAdding((v) => !v)}
               className={
-                "px-4 py-2 rounded-full text-sm font-medium shadow-lg transition-all " +
+                "px-5 py-2.5 text-[11px] uppercase tracking-[0.2em] shadow-lg transition-colors border " +
                 (adding
-                  ? "bg-accent text-white"
-                  : "bg-background text-foreground hover:bg-surface-2 border border-border")
+                  ? "bg-accent text-background border-accent"
+                  : "bg-background text-muted border-border hover:text-accent hover:border-accent/60")
               }
             >
               {adding ? "✕ Annuler" : "+ Ajouter un lieu"}
             </button>
             {adding && (
-              <span className="px-3 py-2 rounded-full bg-background text-xs text-muted border border-border shadow-lg">
+              <span className="px-3 py-2.5 bg-background text-[11px] uppercase tracking-[0.16em] text-muted border border-border shadow-lg">
                 Clique sur la carte pour placer le marqueur
               </span>
             )}
           </div>
         )}
 
-        <div className="absolute top-3 right-3 z-[1100] flex gap-1 bg-background border border-border rounded-full p-1 shadow-md">
+        <div className="absolute top-3 right-3 z-[1100] flex gap-px bg-border border border-border shadow-md">
           {(Object.keys(STYLES) as TileStyle[]).map((s) => (
             <button
               key={s}
               type="button"
               onClick={() => setStyle(s)}
               className={
-                "px-3 py-1 rounded-full text-xs font-medium transition-all " +
+                "px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] transition-colors bg-background " +
                 (style === s
-                  ? "bg-accent text-white"
+                  ? "text-accent"
                   : "text-muted hover:text-foreground")
               }
             >
@@ -476,7 +476,7 @@ export function MapClient({
                   type="button"
                   onClick={() => toggleCategory(c)}
                   className={
-                    "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs border transition-all " +
+                    "inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase tracking-[0.14em] border transition-colors " +
                     (off
                       ? "border-border text-muted opacity-50"
                       : "border-border text-foreground hover:bg-accent-soft")

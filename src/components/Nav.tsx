@@ -37,31 +37,36 @@ export function Nav({
 
   return (
     <header className="sticky top-0 z-50">
-      <div className="bg-background/70 backdrop-blur-xl border-b border-border/60">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2 group">
+      <div className="bg-background border-b border-border">
+        <div className="max-w-6xl mx-auto px-6 min-h-[74px] py-2.5 flex items-center gap-8">
+          <Link href="/" className="flex items-center gap-3.5 shrink-0 group">
             {eitanPhotoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={eitanPhotoUrl}
                 alt="Eitan"
-                className="w-8 h-8 rounded-lg object-cover ring-1 ring-accent/40 shadow-md group-hover:shadow-lg transition-shadow"
+                className="w-[38px] h-[38px] object-cover border border-border-strong grayscale group-hover:grayscale-0 transition-all"
                 data-no-lightbox=""
               />
             ) : (
-              <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent via-accent-2 to-accent-3 flex items-center justify-center text-white font-display font-semibold shadow-md group-hover:shadow-lg transition-shadow">
+              <span className="w-[38px] h-[38px] border border-border-strong flex items-center justify-center font-display text-lg text-accent">
                 E
               </span>
             )}
-            <span
-              className="site-glitch font-display text-lg text-foreground tracking-tight"
-              data-text="Journal d'Eitan"
-            >
-              Journal d'Eitan
+            <span className="flex flex-col leading-[1.15]">
+              <span
+                className="site-glitch font-display text-base text-foreground tracking-tight whitespace-nowrap"
+                data-text="Journal d'Eitan"
+              >
+                Journal d&apos;Eitan
+              </span>
+              <span className="text-[10px] uppercase tracking-[0.26em] text-muted">
+                Dossier EC-021
+              </span>
             </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
+          <nav className="nav-scroll hidden md:flex items-center gap-6 flex-1 min-w-0 overflow-x-auto">
             {links.map((l) => {
               const active =
                 l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
@@ -71,10 +76,8 @@ export function Nav({
                   href={l.href}
                   data-active={active}
                   className={cn(
-                    "tab px-3.5 py-1.5 rounded-full text-sm transition-all",
-                    active
-                      ? "text-foreground font-medium"
-                      : "text-muted hover:text-foreground"
+                    "tab py-4 whitespace-nowrap transition-colors",
+                    active ? "text-accent" : "text-muted hover:text-foreground"
                   )}
                 >
                   {l.label}
@@ -88,9 +91,9 @@ export function Nav({
               <Link
                 href="/admin"
                 className={cn(
-                  "px-3 py-1.5 rounded-full text-xs transition-colors hidden sm:inline-block",
+                  "px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] transition-colors hidden sm:inline-block",
                   pathname.startsWith("/admin")
-                    ? "bg-accent-soft text-accent"
+                    ? "text-accent"
                     : "text-muted hover:text-accent"
                 )}
               >
@@ -132,7 +135,7 @@ export function Nav({
             ) : (
               <Link
                 href="/login"
-                className="px-4 py-1.5 rounded-full bg-foreground text-background text-xs font-medium hover:opacity-90 transition-opacity"
+                className="px-4 py-2 border border-accent text-accent text-[10px] uppercase tracking-[0.2em] hover:bg-accent hover:text-background transition-colors"
               >
                 Connexion
               </Link>
@@ -150,14 +153,14 @@ export function Nav({
       </div>
 
       {open && (
-        <div className="md:hidden bg-background/95 backdrop-blur-xl border-b border-border/60">
+        <div className="md:hidden bg-background border-b border-border">
           <nav className="px-6 py-3 flex flex-col gap-1">
             {links.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className="px-3 py-2 rounded-lg hover:bg-accent-soft text-sm"
+                className="px-3 py-2 rounded-none hover:bg-accent-soft text-sm"
               >
                 {l.label}
               </Link>
@@ -166,7 +169,7 @@ export function Nav({
               <Link
                 href={`/u/${userId}`}
                 onClick={() => setOpen(false)}
-                className="px-3 py-2 rounded-lg hover:bg-accent-soft text-sm"
+                className="px-3 py-2 rounded-none hover:bg-accent-soft text-sm"
               >
                 Mon profil
               </Link>
@@ -175,7 +178,7 @@ export function Nav({
               <Link
                 href="/admin"
                 onClick={() => setOpen(false)}
-                className="px-3 py-2 rounded-lg hover:bg-accent-soft text-sm text-accent"
+                className="px-3 py-2 rounded-none hover:bg-accent-soft text-sm text-accent"
               >
                 Admin
               </Link>

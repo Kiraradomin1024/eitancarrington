@@ -37,8 +37,8 @@ export function ImageUpload({
     shape === "circle"
       ? "rounded-full aspect-square"
       : shape === "wide"
-        ? "rounded-xl aspect-[16/9]"
-        : "rounded-xl aspect-square";
+        ? "rounded-none aspect-[16/9]"
+        : "rounded-none aspect-square";
 
   return (
     <div>

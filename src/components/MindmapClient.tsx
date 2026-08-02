@@ -489,17 +489,17 @@ export function MindmapClient({
   return (
     <div className="space-y-3" data-no-lightbox="">
       {/* Mode tabs */}
-      <div className="flex items-center gap-1 card !p-1 w-fit">
+      <div className="flex items-center gap-2 w-fit">
         {(["full", "explore"] as const).map((m) => (
           <button
             key={m}
             type="button"
             onClick={() => setMode(m)}
             className={
-              "px-4 py-1.5 rounded-full text-xs transition-all " +
+              "px-4 py-2 text-[11px] uppercase tracking-[0.2em] border transition-colors " +
               (mode === m
-                ? "bg-accent text-white"
-                : "text-muted hover:text-foreground")
+                ? "border-accent text-accent"
+                : "border-border text-muted hover:text-foreground")
             }
           >
             {m === "full" ? "Vue complète" : "Exploration"}
@@ -586,7 +586,7 @@ export function MindmapClient({
                 className="!py-1.5 !text-sm"
               />
               {searchResults.length > 0 && (
-                <ul className="absolute top-full left-0 right-0 mt-1 max-h-60 overflow-auto bg-surface border border-border rounded-lg shadow-lg z-20">
+                <ul className="absolute top-full left-0 right-0 mt-1 max-h-60 overflow-auto bg-surface border border-border rounded-none shadow-lg z-20">
                   {searchResults.map((n) => (
                     <li key={n.id}>
                       <button
@@ -655,7 +655,7 @@ export function MindmapClient({
       )}
 
       <div
-        className="w-full h-[78vh] rounded-2xl border border-border overflow-hidden card !p-0"
+        className="w-full h-[78vh] rounded-none border border-border overflow-hidden card !p-0"
         style={{
           background: "linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%)",
         }}

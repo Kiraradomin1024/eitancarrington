@@ -77,7 +77,7 @@ export default async function JournalPage() {
                       Aucun jour dans ce chapitre.
                     </p>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="border-t border-border">
                       {chapterDays.map((d) => (
                         <DayCard key={d.id} day={d} canEdit={canEdit} />
                       ))}
@@ -95,7 +95,7 @@ export default async function JournalPage() {
                   Sans chapitre
                 </h2>
               </div>
-              <div className="space-y-4">
+              <div className="border-t border-border">
                 {orphanDays.map((d) => (
                   <DayCard key={d.id} day={d} canEdit={canEdit} />
                 ))}
@@ -110,30 +110,27 @@ export default async function JournalPage() {
 
 function DayCard({ day: d, canEdit }: { day: Day; canEdit: boolean }) {
   return (
-    <div className="relative group">
+    <div className="relative group border-b border-border last:border-b-0">
       <Link
         href={`/journal/${d.slug ?? d.id}`}
-        className={
-          "card p-5 hover:border-accent/60 transition-colors flex gap-6 items-start block" +
-          (d.pinned ? " border-accent/30 bg-accent/[0.03]" : "")
-        }
+        className="grid grid-cols-[80px_1fr] md:grid-cols-[120px_1fr_auto] gap-6 md:gap-8 items-baseline py-7 pr-10 transition-colors hover:bg-surface-2/40"
       >
-        <div className="text-center font-serif text-foreground shrink-0 w-24">
+        <div>
           {d.day_number ? (
             <>
-              <div className="text-3xl leading-none text-gradient">
+              <div className="font-display font-light text-3xl text-accent leading-none">
                 {d.day_number}
               </div>
-              <div className="text-xs text-muted uppercase tracking-wider mt-1">
-                Jour
+              <div className="meta-label mt-1.5">
+                {formatDate(d.date)}
               </div>
             </>
           ) : (
             <>
-              <div className="text-3xl leading-none">
+              <div className="font-display font-light text-3xl text-accent leading-none">
                 {new Date(d.date).getDate()}
               </div>
-              <div className="text-xs text-muted uppercase tracking-wider mt-1">
+              <div className="meta-label mt-1.5">
                 {new Date(d.date).toLocaleDateString("fr-FR", {
                   month: "short",
                   year: "numeric",
@@ -142,8 +139,9 @@ function DayCard({ day: d, canEdit }: { day: Day; canEdit: boolean }) {
             </>
           )}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="font-serif text-2xl text-foreground flex items-center gap-2">
+
+        <div className="min-w-0">
+          <h3 className="font-display text-2xl text-foreground leading-snug flex items-center gap-2">
             {d.pinned && (
               <svg
                 viewBox="0 0 24 24"
@@ -155,18 +153,20 @@ function DayCard({ day: d, canEdit }: { day: Day; canEdit: boolean }) {
               </svg>
             )}
             {d.title}
-          </div>
-          <div className="text-xs text-muted mt-0.5">
-            {d.day_number ? `Jour ${d.day_number} · ` : ""}
-            {formatDate(d.date)}
-          </div>
+          </h3>
           {d.summary && (
-            <p className="text-foreground/80 mt-2 text-sm">{d.summary}</p>
+            <p className="text-muted mt-2 text-sm leading-relaxed max-w-[62ch]">
+              {d.summary}
+            </p>
           )}
+        </div>
+
+        <div className="hidden md:block meta-label text-right whitespace-nowrap">
+          {d.pinned ? "épinglé" : "session"}
         </div>
       </Link>
       {canEdit && (
-        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-6 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
           <PinButton dayId={d.id} pinned={d.pinned} />
         </div>
       )}
