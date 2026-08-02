@@ -655,7 +655,7 @@ export function MindmapClient({
       )}
 
       <div
-        className="w-full h-[78vh] rounded-none border border-border overflow-hidden card !p-0"
+        className="w-full h-[420px] md:h-[78vh] border border-border overflow-hidden"
         style={{
           background: "linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%)",
         }}

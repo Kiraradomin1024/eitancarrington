@@ -17,12 +17,10 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label={mounted ? (isDark ? "Passer en mode clair" : "Passer en mode sombre") : "Changer le thème"}
       title={mounted ? (isDark ? "Mode clair" : "Mode sombre") : "Thème"}
-      className="relative w-9 h-9 rounded-full flex items-center justify-center
-                 border border-border hover:border-accent/50
-                 bg-surface hover:bg-accent-soft
-                 transition-all duration-300 ease-out
-                 hover:shadow-[0_0_12px_rgba(124,93,250,0.25)]
-                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      className="relative w-11 h-11 xl:w-9 xl:h-9 shrink-0 flex items-center justify-center
+                 border border-border hover:border-accent/60
+                 transition-colors duration-300 ease-out
+                 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
     >
       {/* Sun icon */}
       <svg

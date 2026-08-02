@@ -58,25 +58,25 @@ export default async function Home() {
   return (
     <div className="space-y-20">
       {/* Hero — dossier ouvert : identité à gauche, cliché à droite */}
-      <section className="grid lg:grid-cols-[1.15fr_.85fr] gap-10 lg:gap-16 pt-6 pb-4 items-start">
+      <section className="grid lg:grid-cols-[1.15fr_.85fr] gap-11 lg:gap-16 pt-4 md:pt-6 pb-4 items-start">
         <div>
           <p className="eyebrow mb-7">
             Dossier n° EC-021 · Richman Lane, Los Santos
           </p>
 
-          <h1 className="font-display font-light text-5xl md:text-7xl tracking-tight leading-[0.98]">
+          <h1 className="font-display font-light text-[44px] md:text-6xl lg:text-7xl tracking-tight leading-[1] text-balance">
             {c?.name ?? "Eitan Carrington"}
           </h1>
 
-          <div className="w-16 h-px bg-border-strong my-7" />
+          <div className="w-16 h-px bg-border-strong my-6 md:my-7" />
 
-          <p className="text-lg text-muted leading-relaxed max-w-[52ch]">
+          <p className="text-[17px] md:text-lg text-muted leading-relaxed max-w-[52ch]">
             {c?.age ? `${c.age} ans, ` : "21 ans, "}
             dernier des Carrington. Ce dossier rassemble ce qu&apos;il reste :
             les gens, les nuits, les dettes et les questions sans réponse.
           </p>
 
-          <div className="flex gap-3.5 mt-9 flex-wrap">
+          <div className="flex gap-3 mt-8 md:mt-9 flex-col sm:flex-row sm:flex-wrap">
             <LinkButton href="/journal" variant="primary">
               Ouvrir le journal
             </LinkButton>
@@ -91,7 +91,7 @@ export default async function Home() {
           </div>
 
           {/* Stats en grille à filets */}
-          <div className="hairline-grid grid-cols-3 mt-14">
+          <div className="hairline-grid grid-cols-3 mt-12 md:mt-14">
             <StatCard href="/wiki" label="Personnages" value={npcCount ?? 0} />
             <StatCard href="/journal" label="Jours passés" value={latestDay} />
             <StatCard href="/enquetes" label="Enquêtes" value={invCount ?? 0} />
@@ -166,18 +166,18 @@ export default async function Home() {
       )}
 
       {/* Bio + Famille */}
-      <section className="border-t border-border pt-14 grid md:grid-cols-2 gap-px bg-border border-x border-b border-border">
-        <div className="bg-background p-8">
+      <section className="border-t border-border pt-11 md:pt-14 grid md:grid-cols-2 gap-px bg-border border-x border-b border-border">
+        <div className="bg-background p-6 md:p-8">
           <p className="meta-label mb-4">Qui je suis</p>
-          <h2 className="font-display font-light text-3xl mb-6">Biographie</h2>
+          <h2 className="font-display font-light text-[28px] md:text-3xl mb-5 md:mb-6">Biographie</h2>
           <p className="text-muted leading-[1.85] whitespace-pre-line max-w-[52ch]">
             {c?.bio ??
               "Dernier né de la famille Carrington. Vit à Richman Lane mais ne se reconnait pas dans les délires de sa famille et des autres bourgeois du quartier."}
           </p>
         </div>
-        <div className="bg-background p-8">
+        <div className="bg-background p-6 md:p-8">
           <p className="meta-label mb-4">D&apos;où je viens</p>
-          <h2 className="font-display font-light text-3xl mb-6">
+          <h2 className="font-display font-light text-[28px] md:text-3xl mb-5 md:mb-6">
             Famille &amp; origines
           </h2>
           <p className="text-muted leading-[1.85] whitespace-pre-line max-w-[52ch]">
@@ -200,8 +200,8 @@ function StatCard({
   value: number;
 }) {
   return (
-    <Link href={href} className="block px-5 py-6 group">
-      <div className="font-display font-light text-4xl text-accent leading-none">
+    <Link href={href} className="block px-3.5 py-4 md:px-5 md:py-6 group">
+      <div className="font-display font-light text-[30px] md:text-4xl text-accent leading-none">
         {value}
       </div>
       <div className="meta-label mt-2.5 group-hover:text-foreground transition-colors">

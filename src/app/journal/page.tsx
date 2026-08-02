@@ -113,12 +113,12 @@ function DayCard({ day: d, canEdit }: { day: Day; canEdit: boolean }) {
     <div className="relative group border-b border-border last:border-b-0">
       <Link
         href={`/journal/${d.slug ?? d.id}`}
-        className="grid grid-cols-[80px_1fr] md:grid-cols-[120px_1fr_auto] gap-6 md:gap-8 items-baseline py-7 pr-10 transition-colors hover:bg-surface-2/40"
+        className="grid grid-cols-1 md:grid-cols-[140px_1fr_auto] gap-3 md:gap-8 items-baseline py-6 md:py-7 pr-10 transition-colors hover:bg-surface-2/40"
       >
         <div>
           {d.day_number ? (
             <>
-              <div className="font-display font-light text-3xl text-accent leading-none">
+              <div className="font-display font-light text-[26px] md:text-3xl text-accent leading-none">
                 {d.day_number}
               </div>
               <div className="meta-label mt-1.5">
@@ -127,7 +127,7 @@ function DayCard({ day: d, canEdit }: { day: Day; canEdit: boolean }) {
             </>
           ) : (
             <>
-              <div className="font-display font-light text-3xl text-accent leading-none">
+              <div className="font-display font-light text-[26px] md:text-3xl text-accent leading-none">
                 {new Date(d.date).getDate()}
               </div>
               <div className="meta-label mt-1.5">
@@ -141,7 +141,7 @@ function DayCard({ day: d, canEdit }: { day: Day; canEdit: boolean }) {
         </div>
 
         <div className="min-w-0">
-          <h3 className="font-display text-2xl text-foreground leading-snug flex items-center gap-2">
+          <h3 className="font-display text-[22px] md:text-2xl text-foreground leading-snug flex items-center gap-2">
             {d.pinned && (
               <svg
                 viewBox="0 0 24 24"

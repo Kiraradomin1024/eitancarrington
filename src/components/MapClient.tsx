@@ -452,7 +452,7 @@ export function MapClient({
 
         <div
           ref={containerRef}
-          className="w-full h-[78vh] rounded-2xl border border-border overflow-hidden shadow-sm"
+          className="w-full h-[380px] md:h-[78vh] border border-border overflow-hidden"
           style={{
             background:
               "linear-gradient(180deg, var(--surface) 0%, var(--background) 100%)",

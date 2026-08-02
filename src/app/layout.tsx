@@ -154,7 +154,7 @@ export default async function RootLayout({
             avatarUrl={avatarUrl}
             eitanPhotoUrl={eitanPhotoUrl}
           />
-          <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-10 fade-up">
+          <main className="flex-1 w-full max-w-6xl mx-auto px-5 md:px-6 py-9 md:py-12 pb-24 md:pb-16 fade-up">
             {configured ? children : <SetupNotice />}
           </main>
           <footer className="border-t border-border/60 py-8 text-center text-xs text-muted">

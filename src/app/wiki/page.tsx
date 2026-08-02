@@ -53,10 +53,8 @@ export default async function WikiPage() {
       />
 
       {/* Legend — explains the dots next to Twitch usernames */}
-      <div className="flex flex-wrap items-center gap-4 mb-4 px-3 py-2 rounded border border-border bg-surface-2 text-xs text-muted">
-        <span className="font-display uppercase tracking-wider text-foreground/80">
-          Légende
-        </span>
+      <div className="flex flex-wrap items-center gap-4 mb-4 px-4 py-2.5 border border-border text-[11px] text-muted">
+        <span className="meta-label">Légende</span>
         <span className="inline-flex items-center gap-1.5">
           <TwitchLiveDot isLive={true} size={9} />
           <span>En live sur GTA RP</span>
@@ -68,21 +66,21 @@ export default async function WikiPage() {
       </div>
 
       {/* Eitan — main character card */}
-      <div className="card card-glow p-5 mb-6 flex gap-4 items-center hover:border-accent/60 transition-colors relative">
+      <div className="border border-border p-5 mb-6 flex gap-4 items-center hover:border-accent/60 transition-colors relative">
         <Link
           href="/wiki/eitan"
           aria-label="Eitan Carrington"
-          className="absolute inset-0 z-0 rounded-[inherit]"
+          className="absolute inset-0 z-0"
         />
         {eitanPhoto ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={eitanPhoto}
             alt="Eitan Carrington"
-            className="w-14 h-14 rounded-full object-cover border-2 border-accent/30 shadow-md shrink-0 pointer-events-none relative"
+            className="w-14 h-14 object-cover border border-border-strong shrink-0 pointer-events-none relative"
           />
         ) : (
-          <span className="w-14 h-14 rounded-full bg-gradient-to-br from-accent via-accent-2 to-accent-3 flex items-center justify-center text-white font-display text-2xl shadow-md shrink-0 pointer-events-none relative">
+          <span className="w-14 h-14 border border-border-strong flex items-center justify-center text-accent font-display text-2xl shrink-0 pointer-events-none relative">
             E
           </span>
         )}
@@ -125,7 +123,7 @@ export default async function WikiPage() {
       {npcs.length === 0 ? (
         <Empty>Aucun personnage pour le moment.</Empty>
       ) : (
-        <div className="hairline-grid sm:grid-cols-2 lg:grid-cols-4">
+        <div className="hairline-grid grid-cols-2 lg:grid-cols-4">
           {npcs.map((n) => {
             const isLiveNpc = n.twitch_username
               ? liveSet.has(n.twitch_username.toLowerCase())
@@ -143,7 +141,7 @@ export default async function WikiPage() {
                   aria-label={n.name}
                   className="absolute inset-0 z-0"
                 />
-                <div className="px-6 pt-6 pb-7 pointer-events-none relative">
+                <div className="px-4 pt-4 pb-5 md:px-6 md:pt-6 md:pb-7 pointer-events-none relative">
                   <span
                     className={
                       "relative block w-full aspect-square overflow-hidden mb-5 " +
@@ -164,7 +162,7 @@ export default async function WikiPage() {
                     )}
                   </span>
 
-                  <div className="font-display text-xl leading-tight text-foreground">
+                  <div className="font-display text-lg md:text-xl leading-tight text-foreground">
                     {n.name}
                   </div>
                   <div className="text-xs text-muted mt-1.5 truncate">

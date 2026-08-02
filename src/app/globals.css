@@ -319,6 +319,16 @@ button {
   background: var(--accent);
 }
 
+/* Tiroir mobile — glissement court */
+@keyframes nav-slidein {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.nav-drawer { animation: nav-slidein 0.18s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .nav-drawer { animation: none; }
+}
+
 /* La nav défile sans barre visible */
 .nav-scroll { scrollbar-width: none; -ms-overflow-style: none; }
 .nav-scroll::-webkit-scrollbar { width: 0; height: 0; display: none; }

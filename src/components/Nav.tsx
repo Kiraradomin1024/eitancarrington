@@ -38,30 +38,31 @@ export function Nav({
   return (
     <header className="sticky top-0 z-50">
       <div className="bg-background border-b border-border">
-        <div className="max-w-6xl mx-auto px-6 min-h-[74px] py-2.5 flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-3.5 shrink-0 group">
+        <div className="max-w-6xl mx-auto px-5 lg:px-6 min-h-[62px] xl:min-h-[74px] py-2.5 flex items-center gap-2.5 xl:gap-8">
+          <Link href="/" className="flex items-center gap-3 shrink-0 group">
             {eitanPhotoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={eitanPhotoUrl}
                 alt="Eitan"
-                className="w-[38px] h-[38px] object-cover border border-border-strong"
+                className="w-[34px] h-[34px] xl:w-[38px] xl:h-[38px] object-cover border border-border-strong"
                 data-no-lightbox=""
               />
             ) : (
-              <span className="w-[38px] h-[38px] border border-border-strong flex items-center justify-center font-display text-lg text-accent">
+              <span className="w-[34px] h-[34px] xl:w-[38px] xl:h-[38px] border border-border-strong flex items-center justify-center font-display text-lg text-accent">
                 E
               </span>
             )}
             <span
-              className="site-glitch font-display text-base text-foreground tracking-tight whitespace-nowrap"
+              className="site-glitch font-display text-[15px] xl:text-base text-foreground tracking-tight whitespace-nowrap"
               data-text="Journal d'Eitan"
             >
               Journal d&apos;Eitan
             </span>
           </Link>
 
-          <nav className="nav-scroll hidden md:flex items-center gap-6 flex-1 min-w-0 overflow-x-auto">
+          {/* Nav complète — desktop large uniquement */}
+          <nav className="nav-scroll hidden xl:flex items-center gap-6 flex-1 min-w-0 overflow-x-auto">
             {links.map((l) => {
               const active =
                 l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
@@ -81,12 +82,14 @@ export function Nav({
             })}
           </nav>
 
-          <div className="ml-auto flex items-center gap-3 text-sm">
+          <div className="flex-1" />
+
+          <div className="flex items-center gap-2.5 xl:gap-3 text-sm shrink-0">
             {role === "admin" && (
               <Link
                 href="/admin"
                 className={cn(
-                  "px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] transition-colors hidden sm:inline-block",
+                  "px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] transition-colors hidden xl:inline-block",
                   pathname.startsWith("/admin")
                     ? "text-accent"
                     : "text-muted hover:text-accent"
@@ -99,7 +102,7 @@ export function Nav({
               <>
                 <Link
                   href={userId ? `/u/${userId}` : "/u/edit"}
-                  className="hidden sm:flex items-center gap-2 text-muted hover:text-foreground"
+                  className="hidden xl:flex items-center gap-2 text-muted hover:text-foreground"
                   title="Mon profil"
                 >
                   {avatarUrl ? (
@@ -107,10 +110,10 @@ export function Nav({
                     <img
                       src={avatarUrl}
                       alt=""
-                      className="w-7 h-7 rounded-full object-cover border border-border"
+                      className="w-7 h-7 object-cover border border-border"
                     />
                   ) : (
-                    <span className="w-7 h-7 rounded-full bg-gradient-to-br from-accent-2 to-accent-3 text-white text-xs flex items-center justify-center">
+                    <span className="w-7 h-7 border border-border text-accent text-xs flex items-center justify-center">
                       {(displayName ?? userEmail)[0]?.toUpperCase()}
                     </span>
                   )}
@@ -121,8 +124,8 @@ export function Nav({
                     <span className="text-xs text-warn">en attente</span>
                   )}
                 </Link>
-                <form action="/auth/signout" method="post">
-                  <button className="text-muted hover:text-accent text-xs">
+                <form action="/auth/signout" method="post" className="hidden xl:block">
+                  <button className="text-muted hover:text-accent text-[10px] uppercase tracking-[0.2em]">
                     Sortir
                   </button>
                 </form>
@@ -130,55 +133,124 @@ export function Nav({
             ) : (
               <Link
                 href="/login"
-                className="px-4 py-2 border border-accent text-accent text-[10px] uppercase tracking-[0.2em] hover:bg-accent hover:text-background transition-colors"
+                className="hidden xl:inline-block px-3.5 py-2 border border-accent text-accent text-[10px] uppercase tracking-[0.2em] hover:bg-accent hover:text-background transition-colors whitespace-nowrap"
               >
                 Connexion
               </Link>
             )}
+
             <ThemeToggle />
+
+            {/* Burger — encadré 44px, trois filets */}
             <button
-              className="md:hidden text-foreground"
+              className={cn(
+                "xl:hidden w-11 h-11 border flex flex-col items-center justify-center gap-1 transition-colors shrink-0",
+                open ? "border-accent" : "border-border"
+              )}
               onClick={() => setOpen((o) => !o)}
               aria-label="menu"
+              aria-expanded={open}
             >
-              ☰
+              <span
+                className={cn(
+                  "w-[18px] h-px transition-colors",
+                  open ? "bg-accent" : "bg-muted"
+                )}
+              />
+              <span
+                className={cn(
+                  "w-[18px] h-px transition-colors",
+                  open ? "bg-accent" : "bg-muted"
+                )}
+              />
+              <span
+                className={cn(
+                  "w-[18px] h-px transition-colors",
+                  open ? "bg-accent" : "bg-muted"
+                )}
+              />
             </button>
           </div>
         </div>
       </div>
 
+      {/* Tiroir mobile */}
       {open && (
-        <div className="md:hidden bg-background border-b border-border">
-          <nav className="px-6 py-3 flex flex-col gap-1">
-            {links.map((l) => (
+        <div className="xl:hidden bg-background border-t border-border nav-drawer max-h-[calc(100vh-62px)] overflow-y-auto">
+          {links.map((l, i) => {
+            const active =
+              l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
+            return (
               <Link
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className="px-3 py-2 rounded-none hover:bg-accent-soft text-sm"
+                className="flex justify-between items-center px-5 py-4 min-h-[52px] border-t border-border first:border-t-0"
               >
-                {l.label}
+                <span
+                  className={cn(
+                    "font-display text-xl",
+                    active ? "text-accent" : "text-foreground"
+                  )}
+                >
+                  {l.label}
+                </span>
+                <span className="text-[10px] tracking-[0.2em] text-muted">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
               </Link>
-            ))}
-            {userId && (
-              <Link
-                href={`/u/${userId}`}
-                onClick={() => setOpen(false)}
-                className="px-3 py-2 rounded-none hover:bg-accent-soft text-sm"
-              >
+            );
+          })}
+
+          {userId && (
+            <Link
+              href={`/u/${userId}`}
+              onClick={() => setOpen(false)}
+              className="flex justify-between items-center px-5 py-4 min-h-[52px] border-t border-border"
+            >
+              <span className="font-display text-xl text-foreground">
                 Mon profil
-              </Link>
-            )}
-            {role === "admin" && (
-              <Link
-                href="/admin"
-                onClick={() => setOpen(false)}
-                className="px-3 py-2 rounded-none hover:bg-accent-soft text-sm text-accent"
-              >
-                Admin
-              </Link>
-            )}
-          </nav>
+              </span>
+              <span className="text-[10px] tracking-[0.2em] text-muted">
+                {String(links.length + 1).padStart(2, "0")}
+              </span>
+            </Link>
+          )}
+          {role === "admin" && (
+            <Link
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className="flex justify-between items-center px-5 py-4 min-h-[52px] border-t border-border"
+            >
+              <span className="font-display text-xl text-accent">Admin</span>
+              <span className="text-[10px] tracking-[0.2em] text-muted">
+                {String(links.length + (userId ? 2 : 1)).padStart(2, "0")}
+              </span>
+            </Link>
+          )}
+          {userEmail ? (
+            <form
+              action="/auth/signout"
+              method="post"
+              className="border-t border-border"
+            >
+              <button className="w-full text-left px-5 py-4 min-h-[52px] font-display text-xl text-muted">
+                Sortir
+              </button>
+            </form>
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setOpen(false)}
+              className="flex justify-between items-center px-5 py-4 min-h-[52px] border-t border-border"
+            >
+              <span className="font-display text-xl text-accent">Connexion</span>
+            </Link>
+          )}
+
+          <div className="px-5 py-5 border-t border-border meta-label">
+            Dossier n° EC-021
+          </div>
         </div>
       )}
     </header>
