@@ -38,31 +38,31 @@ export function Nav({
   return (
     <header className="sticky top-0 z-50">
       <div className="bg-background border-b border-border">
-        <div className="max-w-6xl mx-auto px-5 lg:px-6 min-h-[62px] xl:min-h-[74px] py-2.5 flex items-center gap-2.5 xl:gap-8">
+        <div className="max-w-6xl mx-auto px-5 lg:px-6 min-h-[62px] min-[1140px]:min-h-[74px] py-2.5 flex items-center gap-2.5 min-[1140px]:gap-8">
           <Link href="/" className="flex items-center gap-3 shrink-0 group">
             {eitanPhotoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={eitanPhotoUrl}
                 alt="Eitan"
-                className="w-[34px] h-[34px] xl:w-[38px] xl:h-[38px] object-cover border border-border-strong"
+                className="w-[34px] h-[34px] min-[1140px]:w-[38px] min-[1140px]:h-[38px] object-cover border border-border-strong"
                 data-no-lightbox=""
               />
             ) : (
-              <span className="w-[34px] h-[34px] xl:w-[38px] xl:h-[38px] border border-border-strong flex items-center justify-center font-display text-lg text-accent">
+              <span className="w-[34px] h-[34px] min-[1140px]:w-[38px] min-[1140px]:h-[38px] border border-border-strong flex items-center justify-center font-display text-lg text-accent">
                 E
               </span>
             )}
             <span
-              className="site-glitch font-display text-[15px] xl:text-base text-foreground tracking-tight whitespace-nowrap"
+              className="site-glitch font-display text-[15px] min-[1140px]:text-base text-foreground tracking-tight whitespace-nowrap"
               data-text="Journal d'Eitan"
             >
               Journal d&apos;Eitan
             </span>
           </Link>
 
-          {/* Nav complète — desktop large uniquement */}
-          <nav className="nav-scroll hidden xl:flex items-center gap-6 flex-1 min-w-0 overflow-x-auto">
+          {/* Nav complète — à partir de 1140px */}
+          <nav className="nav-scroll hidden min-[1140px]:flex items-center gap-5 flex-1 min-w-0 overflow-x-auto">
             {links.map((l) => {
               const active =
                 l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
@@ -82,14 +82,15 @@ export function Nav({
             })}
           </nav>
 
-          <div className="flex-1" />
+          {/* Espaceur uniquement quand la nav est masquée */}
+          <div className="flex-1 min-[1140px]:hidden" />
 
-          <div className="flex items-center gap-2.5 xl:gap-3 text-sm shrink-0">
+          <div className="flex items-center gap-2.5 min-[1140px]:gap-3 text-sm shrink-0">
             {role === "admin" && (
               <Link
                 href="/admin"
                 className={cn(
-                  "px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] transition-colors hidden xl:inline-block",
+                  "px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] transition-colors hidden min-[1140px]:inline-block",
                   pathname.startsWith("/admin")
                     ? "text-accent"
                     : "text-muted hover:text-accent"
@@ -102,7 +103,7 @@ export function Nav({
               <>
                 <Link
                   href={userId ? `/u/${userId}` : "/u/edit"}
-                  className="hidden xl:flex items-center gap-2 text-muted hover:text-foreground"
+                  className="hidden min-[1140px]:flex items-center gap-2 text-muted hover:text-foreground"
                   title="Mon profil"
                 >
                   {avatarUrl ? (
@@ -124,7 +125,7 @@ export function Nav({
                     <span className="text-xs text-warn">en attente</span>
                   )}
                 </Link>
-                <form action="/auth/signout" method="post" className="hidden xl:block">
+                <form action="/auth/signout" method="post" className="hidden min-[1140px]:block">
                   <button className="text-muted hover:text-accent text-[10px] uppercase tracking-[0.2em]">
                     Sortir
                   </button>
@@ -133,7 +134,7 @@ export function Nav({
             ) : (
               <Link
                 href="/login"
-                className="hidden xl:inline-block px-3.5 py-2 border border-accent text-accent text-[10px] uppercase tracking-[0.2em] hover:bg-accent hover:text-background transition-colors whitespace-nowrap"
+                className="hidden min-[1140px]:inline-block px-3.5 py-2 border border-accent text-accent text-[10px] uppercase tracking-[0.2em] hover:bg-accent hover:text-background transition-colors whitespace-nowrap"
               >
                 Connexion
               </Link>
@@ -144,7 +145,7 @@ export function Nav({
             {/* Burger — encadré 44px, trois filets */}
             <button
               className={cn(
-                "xl:hidden w-11 h-11 border flex flex-col items-center justify-center gap-1 transition-colors shrink-0",
+                "min-[1140px]:hidden w-11 h-11 border flex flex-col items-center justify-center gap-1 transition-colors shrink-0",
                 open ? "border-accent" : "border-border"
               )}
               onClick={() => setOpen((o) => !o)}
@@ -176,7 +177,7 @@ export function Nav({
 
       {/* Tiroir mobile */}
       {open && (
-        <div className="xl:hidden bg-background border-t border-border nav-drawer max-h-[calc(100vh-62px)] overflow-y-auto">
+        <div className="min-[1140px]:hidden bg-background border-t border-border nav-drawer max-h-[calc(100vh-62px)] overflow-y-auto">
           {links.map((l, i) => {
             const active =
               l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);

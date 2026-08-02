@@ -17,7 +17,7 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label={mounted ? (isDark ? "Passer en mode clair" : "Passer en mode sombre") : "Changer le thème"}
       title={mounted ? (isDark ? "Mode clair" : "Mode sombre") : "Thème"}
-      className="relative w-11 h-11 xl:w-9 xl:h-9 shrink-0 flex items-center justify-center
+      className="relative w-11 h-11 min-[1140px]:w-9 min-[1140px]:h-9 shrink-0 flex items-center justify-center
                  border border-border hover:border-accent/60
                  transition-colors duration-300 ease-out
                  focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
