@@ -71,9 +71,8 @@ export default async function Home() {
           <div className="w-16 h-px bg-border-strong my-6 md:my-7" />
 
           <p className="text-[17px] md:text-lg text-muted leading-relaxed max-w-[52ch]">
-            {c?.age ? `${c.age} ans, ` : "21 ans, "}
-            dernier des Carrington. Ce dossier rassemble ce qu&apos;il reste :
-            les gens, les nuits, les dettes et les questions sans réponse.
+            {c?.age ? `${c.age} ans, ` : "24 ans, "}
+            dernier des Carrington.
           </p>
 
           <div className="flex gap-3 mt-8 md:mt-9 flex-col sm:flex-row sm:flex-wrap">

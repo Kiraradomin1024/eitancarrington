@@ -18,7 +18,7 @@ export default async function EditCharacterPage() {
     .maybeSingle();
   const c = (data as Character | null) ?? {
     name: "Eitan Carrington",
-    age: 21,
+    age: 24,
     bio: "",
     background: "",
     photo_url: "",
