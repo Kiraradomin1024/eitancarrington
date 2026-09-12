@@ -6,6 +6,11 @@
    ═══════════════════════════════════════════════════════════ */
 
 :root {
+  /* Indique au navigateur le thème des widgets natifs (menus de
+     <select>, scrollbars, date pickers) — sans ça le popup d'un
+     select reste blanc et son texte clair devient illisible. */
+  color-scheme: light;
+
   /* Light — papier ivoire */
   --background: #f6f1e6;
   --background-soft: #efe8d8;
@@ -44,6 +49,8 @@
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
+
   /* Dark — noir & or, le mode vedette */
   --background: #0b0907;
   --background-soft: #131009;
@@ -230,6 +237,21 @@ input:focus, textarea:focus, select:focus {
   border-color: var(--accent);
   box-shadow: none;
   background: transparent;
+}
+/* Le popup natif d'un select hérite du fond du select : transparent
+   se résout en blanc, donc on pose un fond opaque explicite. Les
+   options sont recolorées pour Chrome/Edge, qui les stylent. */
+select,
+select:focus {
+  background: var(--surface);
+}
+select option {
+  background: var(--surface);
+  color: var(--foreground);
+}
+select option:checked {
+  background: var(--surface-2);
+  color: var(--foreground);
 }
 input::placeholder, textarea::placeholder {
   color: var(--muted);
