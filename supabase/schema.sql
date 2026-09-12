@@ -92,7 +92,7 @@ create table if not exists public.npcs (
   family text,
   neighborhood text,
   occupation text,
-  status text default 'alive' check (status in ('alive','dead','missing','unknown')),
+  status text default 'alive' check (status in ('alive','dead','missing','gone','jailed','unknown')),
   tags text[] default '{}',
   created_by uuid references public.profiles(id) on delete set null,
   created_at timestamptz not null default now(),

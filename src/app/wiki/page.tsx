@@ -133,7 +133,9 @@ export default async function WikiPage() {
                 ? "text-success"
                 : n.status === "missing"
                   ? "text-danger"
-                  : "text-muted";
+                  : n.status === "jailed"
+                    ? "text-warn"
+                    : "text-muted";
             return (
               <div key={n.id} className="relative group">
                 <Link

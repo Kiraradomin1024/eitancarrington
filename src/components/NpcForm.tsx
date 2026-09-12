@@ -60,6 +60,8 @@ export function NpcForm({
             <option value="alive">En vie</option>
             <option value="dead">Décédé</option>
             <option value="missing">Disparu</option>
+            <option value="gone">Parti</option>
+            <option value="jailed">En prison</option>
             <option value="unknown">Inconnu</option>
           </select>
         </Field>

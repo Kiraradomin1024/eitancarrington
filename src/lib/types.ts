@@ -30,7 +30,13 @@ export type Character = {
   updated_at: string;
 };
 
-export type NpcStatus = "alive" | "dead" | "missing" | "unknown";
+export type NpcStatus =
+  | "alive"
+  | "dead"
+  | "missing"
+  | "gone"
+  | "jailed"
+  | "unknown";
 export type Npc = {
   id: string;
   slug: string | null;
@@ -151,6 +157,8 @@ export const STATUS_LABELS: Record<NpcStatus, string> = {
   alive: "En vie",
   dead: "Décédé",
   missing: "Disparu",
+  gone: "Parti",
+  jailed: "En prison",
   unknown: "Inconnu",
 };
 
