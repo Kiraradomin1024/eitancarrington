@@ -9,7 +9,7 @@ export default async function NewChapterPage() {
 
   return (
     <div>
-      <PageTitle title="Nouveau chapitre" />
+      <PageTitle title="ouvrir un chapitre" subtitle="un nouvel intercalaire dans le journal." />
       <Card>
         <form action={createChapter} className="grid sm:grid-cols-2 gap-4">
           <Field label="Titre *" hint="ex: Chapitre 2">

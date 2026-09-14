@@ -32,9 +32,9 @@ const ACTION_LABEL: Record<AuditRow["action"], string> = {
 };
 
 const ACTION_TONE: Record<AuditRow["action"], string> = {
-  insert: "text-emerald-600 dark:text-emerald-400",
-  update: "text-accent",
-  delete: "text-danger",
+  insert: "text-pen-green",
+  update: "text-ink",
+  delete: "text-pen-red",
 };
 
 function formatRelativeTime(iso: string): string {
@@ -173,7 +173,7 @@ export async function ActivityFeed({
               {r.user_id ? (
                 <Link
                   href={`/u/${r.user_id}`}
-                  className="text-foreground font-medium hover:text-accent inline-flex items-center gap-1.5"
+                  className="hand text-[19px] text-ink font-semibold hover:underline inline-flex items-center gap-1.5"
                 >
                   {authorInfo?.avatar ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -183,7 +183,7 @@ export async function ActivityFeed({
                       className="w-5 h-5 rounded-full object-cover border border-border"
                     />
                   ) : (
-                    <span className="w-5 h-5 rounded-full bg-gradient-to-br from-accent-2 to-accent-3 text-white text-[10px] flex items-center justify-center">
+                    <span className="w-5 h-5 rounded-full text-ink-faint text-[11px] flex items-center justify-center" style={{ background: "var(--photo-empty)" }}>
                       {authorName[0]?.toUpperCase()}
                     </span>
                   )}
@@ -202,7 +202,7 @@ export async function ActivityFeed({
               {link ? (
                 <Link
                   href={link.href}
-                  className="text-accent hover:underline truncate max-w-[20em]"
+                  className="text-ink underline underline-offset-4 truncate max-w-[20em]"
                 >
                   {link.label}
                 </Link>

@@ -1,9 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { canContribute, getCurrentUserAndRole, isAdmin } from "@/lib/auth";
-import { Badge, Card, Empty, PageTitle } from "@/components/ui";
+import { Empty } from "@/components/ui";
 import type { Issue } from "@/lib/types";
-import { IssueForm, EditableIssueCard, IssueRowActions } from "./client-parts";
+import { IssueForm, EditableIssueCard } from "./client-parts";
 import { createIssue, deleteIssue, updateIssue, updateIssueStatus } from "./actions";
+import { HandTitle, PageNumber } from "@/components/paper";
 
 export default async function IssuesPage() {
   const supabase = await createClient();
@@ -23,59 +24,61 @@ export default async function IssuesPage() {
 
   return (
     <div>
-      <PageTitle
-        title="Soucis"
-        subtitle="Les problèmes, dilemmes et arcs narratifs en cours."
-      />
+      <HandTitle
+        className="mb-10"
+        sub="la liste de ce qui ne va pas. je coche quand c'est réglé, je ne l'efface jamais."
+      >
+        les soucis
+      </HandTitle>
 
-      {canAdd && (
-        <div className="mb-8">
-          <h2 className="font-serif text-xl text-accent mb-3">
-            Ajouter un souci
-          </h2>
-          <IssueForm action={createIssue} />
+      <div className={"grid gap-12 items-start " + (canAdd ? "lg:grid-cols-[1fr_380px]" : "max-w-[820px]")}>
+        <div className="min-w-0">
+          <p className="typed mb-2">en cours · {active.length}</p>
+          {active.length === 0 ? (
+            <Empty>rien à signaler. tout va bien… pour l&apos;instant.</Empty>
+          ) : (
+            <div>
+              {active.map((i) => (
+                <EditableIssueCard
+                  key={i.id}
+                  issue={i}
+                  canEdit={canEdit}
+                  updateAction={updateIssue.bind(null, i.id)}
+                  onUpdateStatus={updateIssueStatus}
+                  onDelete={deleteIssue}
+                />
+              ))}
+            </div>
+          )}
+
+          {resolved.length > 0 && (
+            <>
+              <p className="typed mt-12 mb-2">réglés · {resolved.length}</p>
+              <div>
+                {resolved.map((i) => (
+                  <EditableIssueCard
+                    key={i.id}
+                    issue={i}
+                    canEdit={canEdit}
+                    updateAction={updateIssue.bind(null, i.id)}
+                    onUpdateStatus={updateIssueStatus}
+                    onDelete={deleteIssue}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
-      )}
 
-      <h2 className="font-serif text-2xl text-accent mb-3 title-rule">
-        En cours ({active.length})
-      </h2>
-      {active.length === 0 ? (
-        <Empty>Rien à signaler. Tout va bien… pour l&apos;instant.</Empty>
-      ) : (
-        <div className="space-y-3 mb-10">
-          {active.map((i) => (
-            <EditableIssueCard
-              key={i.id}
-              issue={i}
-              canEdit={canEdit}
-              updateAction={updateIssue.bind(null, i.id)}
-              onUpdateStatus={updateIssueStatus}
-              onDelete={deleteIssue}
-            />
-          ))}
-        </div>
-      )}
-
-      {resolved.length > 0 && (
-        <>
-          <h2 className="font-serif text-2xl text-muted mb-3 title-rule">
-            Résolus ({resolved.length})
-          </h2>
-          <div className="space-y-2 opacity-60">
-            {resolved.map((i) => (
-              <EditableIssueCard
-                key={i.id}
-                issue={i}
-                canEdit={canEdit}
-                updateAction={updateIssue.bind(null, i.id)}
-                onUpdateStatus={updateIssueStatus}
-                onDelete={deleteIssue}
-              />
-            ))}
+        {canAdd && (
+          <div className="lg:sticky lg:top-6">
+            <p className="hand text-[24px] font-semibold mb-3">noter un nouveau souci</p>
+            <IssueForm action={createIssue} />
           </div>
-        </>
-      )}
+        )}
+      </div>
+
+      <PageNumber>8</PageNumber>
     </div>
   );
 }

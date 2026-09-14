@@ -120,11 +120,11 @@ export function DayForm({
           </Field>
         </div>
         <div className="md:col-span-2">
-          <span className="text-sm text-muted mb-1.5 block">
+          <span className="typed mb-1 block">
             Personnages impliqués
           </span>
           {npcs.length === 0 ? (
-            <p className="text-xs text-muted italic">
+            <p className="hand text-[18px] text-ink-faint">
               Aucun personnage encore créé — ajoute-en dans le wiki.
             </p>
           ) : (
@@ -151,7 +151,7 @@ export function DayForm({
           )}
         </div>
         {error && (
-          <p className="md:col-span-2 text-danger text-xs">{error}</p>
+          <p className="md:col-span-2 hand text-pen-red text-[18px]">{error}</p>
         )}
         <div className="md:col-span-2 flex justify-end">
           <Button type="submit" disabled={pending}>

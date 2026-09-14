@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { Card } from "@/components/ui";
+import { Sheet } from "@/components/paper";
 import { getCurrentUserAndRole, isAdmin } from "@/lib/auth";
 import { revertAuditEntry } from "@/app/admin/revert-action";
 import Link from "next/link";
@@ -102,21 +102,27 @@ function diffFields(
 
 const ACTION_LABEL: Record<AuditRow["action"], string> = {
   insert: "création",
-  update: "modification",
+  update: "retouche",
   delete: "suppression",
 };
 
 const ACTION_TONE: Record<AuditRow["action"], string> = {
-  insert: "text-emerald-600 dark:text-emerald-400",
-  update: "text-accent",
-  delete: "text-danger",
+  insert: "text-pen-green",
+  update: "text-ink",
+  delete: "text-pen-red",
 };
 
+function shortDate(iso: string): string {
+  const d = new Date(iso);
+  return `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+/** Le petit billet « qui a touché à cette page » (réservé aux admins) */
 export async function HistoryPanel({
   entityType,
   entityId,
   limit = 30,
-  title = "Historique",
+  title = "Qui a touché à cette page",
 }: {
   entityType: string;
   entityId: string;
@@ -140,29 +146,15 @@ export async function HistoryPanel({
 
   const rows = (data ?? []) as AuditRow[];
 
-  if (error) {
+  if (error || rows.length === 0) {
     return (
-      <Card>
-        <h2 className="font-display text-2xl text-accent title-rule m-0">
-          {title}
-        </h2>
-        <p className="text-muted text-sm mt-2 italic">
-          Historique indisponible (migration 013 non appliquée ?).
+      <Sheet className="max-w-[340px] !pt-8" rotate="-1.6deg" label={title}>
+        <p className="hand text-[19px] text-ink-faint">
+          {error
+            ? "historique indisponible (migration 013 non appliquée ?)"
+            : "personne n'y a encore touché."}
         </p>
-      </Card>
-    );
-  }
-
-  if (rows.length === 0) {
-    return (
-      <Card>
-        <h2 className="font-display text-2xl text-accent title-rule m-0">
-          {title}
-        </h2>
-        <p className="text-muted text-sm mt-2 italic">
-          Aucune modification enregistrée pour le moment.
-        </p>
-      </Card>
+      </Sheet>
     );
   }
 
@@ -183,42 +175,51 @@ export async function HistoryPanel({
     }
   }
 
+  const preview = rows.slice(0, 3);
+
   return (
-    <Card>
-      <details>
-        <summary className="cursor-pointer select-none flex items-center gap-2">
-          <h2 className="font-display text-2xl text-accent title-rule flex-1 m-0">
-            {title} ({rows.length}
-            {rows.length === limit ? "+" : ""})
-          </h2>
-          <span className="text-xs text-muted">▾ déplier</span>
+    <Sheet className="max-w-[460px] !pt-8" rotate="-1.2deg" label={title}>
+      <ul className="font-typed text-[11.5px] leading-[1.95] uppercase tracking-[0.06em] text-typed-strong">
+        {preview.map((r) => (
+          <li key={r.id} className="truncate">
+            {shortDate(r.created_at)} ·{" "}
+            {(r.user_id && profilesMap.get(r.user_id)) ?? "inconnu"} —{" "}
+            <span className={ACTION_TONE[r.action]}>{ACTION_LABEL[r.action]}</span>
+          </li>
+        ))}
+      </ul>
+
+      <details className="mt-3">
+        <summary className="hand text-[19px] text-ink-soft cursor-pointer select-none underline underline-offset-4">
+          tout le détail ({rows.length}
+          {rows.length === limit ? "+" : ""})
         </summary>
-        <ul className="mt-4 space-y-3">
+        <ul className="mt-3 space-y-3">
           {rows.map((r) => {
             const author =
               (r.user_id && profilesMap.get(r.user_id)) ?? "Inconnu";
-            const authorEl = r.user_id ? (
-              <Link
-                href={`/u/${r.user_id}`}
-                className="text-foreground hover:text-accent"
-              >
-                par {author}
-              </Link>
-            ) : (
-              <span className="text-foreground">par {author}</span>
-            );
-            const changes = r.action === "update" ? diffFields(r.before, r.after) : [];
+            const changes =
+              r.action === "update" ? diffFields(r.before, r.after) : [];
             return (
               <li
                 key={r.id}
-                className="border-l-2 border-border pl-3 text-sm"
+                className="border-l-2 border-[color:var(--sheet-rule)] pl-3 text-[13px]"
               >
                 <div className="flex flex-wrap gap-x-2 items-baseline">
-                  <span className={`font-medium ${ACTION_TONE[r.action]}`}>
+                  <span className={`font-typed uppercase text-[11px] tracking-[0.1em] ${ACTION_TONE[r.action]}`}>
                     {ACTION_LABEL[r.action]}
                   </span>
-                  {authorEl}
-                  <span className="text-muted text-xs">
+                  {r.user_id ? (
+                    <Link
+                      href={`/u/${r.user_id}`}
+                      className="hand text-[18px] text-ink hover:underline"
+                    >
+                      par {author}
+                    </Link>
+                  ) : (
+                    <span className="hand text-[18px] text-ink">par {author}</span>
+                  )}
+                  <span className="typed normal-case tracking-normal">
                     · {formatRelativeTime(r.created_at)}
                   </span>
                   {canRevert && (
@@ -231,7 +232,7 @@ export async function HistoryPanel({
                     >
                       <button
                         type="submit"
-                        className="text-xs text-muted hover:text-danger transition-colors"
+                        className="hand text-[17px] text-ink-soft hover:text-pen-red"
                         title="Annuler cette modification"
                       >
                         ↶ annuler
@@ -240,20 +241,16 @@ export async function HistoryPanel({
                   )}
                 </div>
                 {r.action === "update" && changes.length > 0 && (
-                  <ul className="mt-1 space-y-0.5 text-xs text-muted">
+                  <ul className="mt-1 space-y-0.5 font-typed text-[11.5px] text-typed">
                     {changes.map((c) => (
-                      <li key={c.field}>
-                        <span className="text-foreground/80">
+                      <li key={c.field} className="break-words">
+                        <span className="text-typed-strong">
                           {FIELD_LABELS[c.field] ?? c.field}
                         </span>
-                        {": "}
-                        <span className="line-through">
-                          {previewValue(c.from)}
-                        </span>
+                        {" : "}
+                        <span className="line-through">{previewValue(c.from)}</span>
                         {" → "}
-                        <span className="text-foreground">
-                          {previewValue(c.to)}
-                        </span>
+                        <span className="text-print">{previewValue(c.to)}</span>
                       </li>
                     ))}
                   </ul>
@@ -263,6 +260,6 @@ export async function HistoryPanel({
           })}
         </ul>
       </details>
-    </Card>
+    </Sheet>
   );
 }

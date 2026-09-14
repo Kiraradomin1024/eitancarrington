@@ -3,7 +3,9 @@
 import type { Chapter } from "@/lib/types";
 import { useState } from "react";
 import { updateChapter, deleteChapter } from "./chapter-actions";
+import { roman } from "@/lib/ink";
 
+/** L'intercalaire d'un chapitre : étiquette kraft, titre à la main */
 export function ChapterHeader({
   chapter,
   canEdit,
@@ -19,7 +21,7 @@ export function ChapterHeader({
 
   if (editing) {
     return (
-      <div className="mb-6 card p-4">
+      <div className="mb-6 sheet sheet--stapled px-6 pt-8 pb-5 max-w-[640px]">
         <form
           action={async (fd) => {
             setPending(true);
@@ -33,41 +35,37 @@ export function ChapterHeader({
               setPending(false);
             }
           }}
-          className="space-y-3"
+          className="space-y-4"
         >
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs uppercase tracking-wider text-muted mb-1 block font-medium">
-                Titre
-              </label>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <label className="block">
+              <span className="typed mb-1 block">Titre</span>
               <input name="title" defaultValue={chapter.title} required />
-            </div>
-            <div>
-              <label className="text-xs uppercase tracking-wider text-muted mb-1 block font-medium">
-                Sous-titre
-              </label>
+            </label>
+            <label className="block">
+              <span className="typed mb-1 block">Sous-titre</span>
               <input
                 name="subtitle"
                 defaultValue={chapter.subtitle ?? ""}
                 placeholder="ex: L'arrivée à Los Santos"
               />
-            </div>
+            </label>
           </div>
-          {error && <p className="text-danger text-xs">{error}</p>}
-          <div className="flex gap-2 justify-end">
+          {error && <p className="hand text-pen-red text-[18px]">{error}</p>}
+          <div className="flex gap-5 justify-end items-center">
             <button
               type="button"
               onClick={() => setEditing(false)}
-              className="px-3 py-1 text-sm text-muted hover:text-foreground transition"
+              className="hand text-[20px] text-ink-soft underline underline-offset-4"
             >
-              Annuler
+              laisser tomber
             </button>
             <button
               type="submit"
               disabled={pending}
-              className="px-4 py-1.5 text-sm rounded-full bg-foreground text-background hover:opacity-90 transition"
+              className="stamp stamp--sm text-ink"
             >
-              {pending ? "..." : "Enregistrer"}
+              {pending ? "…" : "Enregistrer"}
             </button>
           </div>
         </form>
@@ -76,37 +74,29 @@ export function ChapterHeader({
   }
 
   return (
-    <div className="mb-6 flex items-end gap-4 flex-wrap">
+    <div className="mb-5 flex items-end gap-4 flex-wrap pr-10">
       <div className="flex-1 min-w-0">
-        <div className="flex items-baseline gap-3">
-          <span className="font-display text-5xl md:text-6xl text-gradient leading-none">
-            {chapter.number}
-          </span>
-          <div>
-            <h2 className="font-serif text-2xl md:text-3xl text-foreground leading-tight">
-              {chapter.title}
-              {maxDayNumber > 0 && (
-                <span className="ml-2 text-sm font-sans font-normal text-muted">
-                  Jour {maxDayNumber}
-                </span>
-              )}
-            </h2>
-            {chapter.subtitle && (
-              <p className="text-muted text-sm mt-0.5 italic">
-                {chapter.subtitle}
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="mt-2 h-px bg-gradient-to-r from-accent/50 via-accent-2/30 to-transparent" />
+        <span className="label-kraft">
+          Chapitre {roman(chapter.number)}
+          {maxDayNumber > 0 && ` · jusqu'au jour ${maxDayNumber}`}
+        </span>
+        <h2 className="hand text-[32px] md:text-[38px] font-semibold leading-none mt-4">
+          {chapter.title}
+        </h2>
+        {chapter.subtitle && (
+          <p className="hand text-[20px] md:text-[22px] text-ink-soft mt-1">
+            {chapter.subtitle}
+          </p>
+        )}
       </div>
       {canEdit && (
-        <div className="flex gap-2 shrink-0">
+        <div className="flex gap-4 shrink-0 items-baseline">
           <button
+            type="button"
             onClick={() => setEditing(true)}
-            className="text-xs text-muted hover:text-foreground transition px-2 py-1 rounded border border-border hover:border-accent/40"
+            className="hand text-[19px] text-ink-soft hover:text-ink underline underline-offset-4"
           >
-            Modifier
+            renommer
           </button>
           <form
             action={async () => {
@@ -121,9 +111,9 @@ export function ChapterHeader({
           >
             <button
               type="submit"
-              className="text-xs text-danger/70 hover:text-danger transition px-2 py-1 rounded border border-danger/20 hover:border-danger/40"
+              className="hand text-[19px] text-pen-red/80 hover:text-pen-red underline underline-offset-4"
             >
-              Suppr.
+              retirer
             </button>
           </form>
         </div>

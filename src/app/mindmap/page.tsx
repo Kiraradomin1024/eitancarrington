@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUserAndRole, isAdmin } from "@/lib/auth";
-import { PageTitle, Empty } from "@/components/ui";
+import { Empty } from "@/components/ui";
 import type { Npc, Relation, Character } from "@/lib/types";
 import { MindmapClient } from "@/components/MindmapClient";
 
@@ -60,14 +60,9 @@ export default async function MindmapPage() {
 
   return (
     <div>
-      <PageTitle
-        title="Mindmap"
-        subtitle="Visualisation interactive des liens. Choisis un layout par défaut, déplace les nœuds, sauvegarde ton arrangement perso."
-      />
       {(npcs ?? []).length === 0 ? (
         <Empty>
-          Pas encore de personnages. Ajoute-en dans le wiki pour voir la
-          mindmap se remplir.
+          personne dans l&apos;album pour l&apos;instant, donc rien à relier.
         </Empty>
       ) : (
         <MindmapClient

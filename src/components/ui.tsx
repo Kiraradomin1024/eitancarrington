@@ -2,6 +2,12 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import * as React from "react";
 
+/* Primitives d'interface, repeintes aux couleurs du cahier :
+   les boutons sont des tampons, les cartes des feuilles tapées. */
+
+const STAMP_BTN =
+  "inline-flex items-center justify-center gap-2 px-5 py-2.5 font-stamp text-[12px] font-medium uppercase tracking-[0.16em] border-2 transition-colors whitespace-nowrap";
+
 export function Button({
   children,
   className,
@@ -14,13 +20,13 @@ export function Button({
     <button
       {...props}
       className={cn(
-        "inline-flex items-center justify-center px-6 py-3 text-[11px] uppercase tracking-[0.22em] transition-colors border",
+        variant !== "ghost" && STAMP_BTN,
         variant === "primary" &&
-          "border-accent text-accent hover:bg-accent hover:text-background",
+          "border-ink text-ink hover:bg-ink hover:text-paper",
         variant === "ghost" &&
-          "border-border text-muted hover:border-accent/60 hover:text-accent",
+          "hand text-[21px] leading-none text-ink-soft underline decoration-2 underline-offset-4 hover:text-ink px-1 py-1",
         variant === "danger" &&
-          "border-danger/50 text-danger hover:bg-danger hover:text-background",
+          "border-pen-red text-pen-red hover:bg-pen-red hover:text-paper",
         "disabled:opacity-50 disabled:cursor-not-allowed",
         className
       )}
@@ -45,13 +51,13 @@ export function LinkButton({
     <Link
       href={href}
       className={cn(
-        "inline-flex items-center justify-center px-6 py-3 text-[11px] uppercase tracking-[0.22em] transition-colors border",
+        variant !== "ghost" && STAMP_BTN,
         variant === "primary" &&
-          "border-accent text-accent hover:bg-accent hover:text-background",
+          "border-ink text-ink hover:bg-ink hover:text-paper",
         variant === "ghost" &&
-          "border-border text-muted hover:border-accent/60 hover:text-accent",
+          "hand text-[21px] leading-none text-ink-soft underline decoration-2 underline-offset-4 hover:text-ink px-1 py-1 whitespace-nowrap",
         variant === "gradient" &&
-          "border-accent bg-accent text-background hover:bg-accent-2 hover:border-accent-2",
+          "border-ink bg-ink text-paper hover:bg-transparent hover:text-ink",
         className
       )}
     >
@@ -60,6 +66,7 @@ export function LinkButton({
   );
 }
 
+/** Une feuille tapée posée sur la page */
 export function Card({
   children,
   className,
@@ -70,13 +77,7 @@ export function Card({
   glow?: boolean;
 }) {
   return (
-    <div
-      className={cn(
-        "card p-6",
-        glow && "card-glow",
-        className
-      )}
-    >
+    <div className={cn("card p-6", glow && "card-glow pt-8", className)}>
       {children}
     </div>
   );
@@ -92,25 +93,28 @@ export function PageTitle({
   title: string;
   subtitle?: string;
   action?: React.ReactNode;
+  /** Annotation au stylo rouge, légèrement penchée */
   scribble?: string;
-  /** Petit intitulé de section en capitales dorées, ex. "Section II · Registre" */
+  /** Étiquette kraft collée au-dessus du titre */
   eyebrow?: string;
 }) {
   return (
-    <div className="mb-12 flex items-end justify-between gap-6 flex-wrap">
+    <div className="mb-10 flex items-end justify-between gap-x-6 gap-y-4 flex-wrap">
       <div className="min-w-0">
-        {eyebrow && <p className="eyebrow mb-4">{eyebrow}</p>}
-        {scribble && !eyebrow && <p className="scribble mb-2">{scribble}</p>}
-        <h1 className="font-display font-light text-4xl md:text-6xl text-foreground tracking-tight leading-[1.02]">
+        {eyebrow && <span className="label-kraft mb-4">{eyebrow}</span>}
+        <h1 className="hand font-semibold text-[40px] md:text-[50px] leading-[0.95] text-ink">
           {title}
         </h1>
         {subtitle && (
-          <p className="mt-5 text-muted text-base max-w-[56ch] leading-relaxed">
+          <p className="hand mt-2 text-[20px] md:text-[23px] leading-snug text-ink-soft max-w-[46ch]">
             {subtitle}
           </p>
         )}
+        {scribble && (
+          <p className="scribble mt-2 text-pen-red">{scribble}</p>
+        )}
       </div>
-      {action}
+      {action && <div className="flex items-center gap-3 flex-wrap">{action}</div>}
     </div>
   );
 }
@@ -126,24 +130,30 @@ export function Field({
 }) {
   return (
     <div className="block">
-      <span className="text-xs uppercase tracking-wider text-muted mb-1.5 block font-medium">
-        {label}
-      </span>
+      <span className="typed mb-1 block">{label}</span>
       {children}
-      {hint && <span className="text-xs text-muted mt-1 block">{hint}</span>}
+      {hint && (
+        <span className="hand text-[17px] text-ink-faint mt-1 block">{hint}</span>
+      )}
     </div>
   );
 }
 
+/** Page blanche du cahier */
 export function Empty({ children }: { children: React.ReactNode }) {
   return (
-    <div className="text-center py-24 text-muted border border-border">
-      <p className="font-hand text-2xl text-accent mb-2">vide pour l&apos;instant</p>
-      <p className="text-sm">{children}</p>
+    <div className="py-16 md:py-24 max-w-[40ch]">
+      <p className="hand text-[26px] text-ink-faint leading-tight">
+        page blanche.
+      </p>
+      <p className="hand text-[21px] text-ink-soft mt-1 leading-snug">
+        {children}
+      </p>
     </div>
   );
 }
 
+/** Petit tampon */
 export function Badge({
   children,
   tone = "neutral",
@@ -154,13 +164,14 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-block px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] border",
-        tone === "neutral" && "border-border text-muted",
-        tone === "accent" && "border-accent/50 text-accent",
-        tone === "danger" && "border-danger/50 text-danger",
-        tone === "ok" && "border-success/50 text-success",
-        tone === "warn" && "border-warn/50 text-warn"
+        "stamp stamp--sm",
+        tone === "neutral" && "text-pen-grey",
+        tone === "accent" && "text-pen-violet",
+        tone === "danger" && "text-pen-red stamp--double",
+        tone === "ok" && "text-pen-green",
+        tone === "warn" && "text-pen-amber"
       )}
+      style={{ transform: "rotate(-1.5deg)" }}
     >
       {children}
     </span>

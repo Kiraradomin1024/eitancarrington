@@ -63,7 +63,7 @@ export default async function EditNpcPage({
 
   return (
     <div>
-      <PageTitle title={`Modifier ${npc.name}`} />
+      <PageTitle title="corriger la fiche" subtitle={npc.name} />
       <NpcForm
         initial={npc}
         action={update}

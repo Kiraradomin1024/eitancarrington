@@ -27,7 +27,7 @@ export default async function EditCharacterPage() {
 
   return (
     <div>
-      <PageTitle title="Modifier la fiche d'Eitan" />
+      <PageTitle title="corriger ma fiche" subtitle="ce que je veux bien qu'on sache." />
       <CharacterForm initial={c} action={updateCharacter} />
     </div>
   );

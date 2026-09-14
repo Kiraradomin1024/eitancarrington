@@ -56,11 +56,11 @@ export default async function PublicProfilePage({
     <div>
       <PageTitle
         title={name}
-        subtitle="Profil contributeur"
+        subtitle="une des mains qui tiennent ce cahier"
         action={
           isSelf && (
             <LinkButton href="/u/edit" variant="ghost">
-              Modifier mon profil
+              corriger mon profil
             </LinkButton>
           )
         }
@@ -74,10 +74,10 @@ export default async function PublicProfilePage({
               <img
                 src={profile.avatar_url}
                 alt={name}
-                className="w-full aspect-square object-cover rounded-full mb-4 border border-border"
+                className="w-full aspect-square object-cover mb-4"
               />
             ) : (
-              <div className="w-full aspect-square rounded-full bg-gradient-to-br from-accent-2 to-accent-3 text-white flex items-center justify-center font-display text-7xl mb-4">
+              <div className="w-full aspect-square flex items-center justify-center hand text-7xl text-ink-faint mb-4" style={{ background: "var(--photo-empty)" }}>
                 {name[0]?.toUpperCase()}
               </div>
             )}
@@ -86,16 +86,16 @@ export default async function PublicProfilePage({
                 {profile.bio}
               </p>
             ) : (
-              <p className="text-sm text-muted italic">
-                Pas de bio pour l&apos;instant.
+              <p className="hand text-[19px] text-ink-faint">
+                pas de bio pour l&apos;instant.
               </p>
             )}
           </Card>
         </div>
 
         <div className="md:col-span-2 space-y-4">
-          <h2 className="font-serif text-2xl text-accent mb-3 title-rule">
-            Contributions récentes
+          <h2 className="hand text-[28px] font-semibold text-ink mb-3 ">
+            ce qu&apos;elle ou il a écrit dernièrement
           </h2>
           <ActivityFeed userId={profile.id} limit={50} />
         </div>

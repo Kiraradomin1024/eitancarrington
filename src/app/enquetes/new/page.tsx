@@ -9,7 +9,7 @@ export default async function NewInvPage() {
   if (!canContribute(role)) redirect("/enquetes");
   return (
     <div>
-      <PageTitle title="Nouvelle enquête" />
+      <PageTitle title="ouvrir un dossier" subtitle="une chemise neuve, une affaire de plus." />
       <InvestigationForm action={createInvestigation} />
     </div>
   );

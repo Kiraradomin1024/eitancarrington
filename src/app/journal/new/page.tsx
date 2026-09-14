@@ -31,7 +31,7 @@ export default async function NewDayPage() {
 
   return (
     <div>
-      <PageTitle title="Nouvelle entrée du journal" />
+      <PageTitle title="écrire un jour" subtitle="ce qui s'est passé, qui était là, ce qu'il faut retenir." />
       <DayForm
         npcs={npcs ?? []}
         chapters={chapters}

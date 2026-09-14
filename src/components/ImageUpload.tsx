@@ -42,7 +42,7 @@ export function ImageUpload({
 
   return (
     <div>
-      <span className="text-xs uppercase tracking-wider text-muted mb-1.5 block font-medium">
+      <span className="typed mb-1 block">
         {label}
       </span>
       <input type="hidden" name={name} value={url ?? ""} />
@@ -77,7 +77,7 @@ export function ImageUpload({
             </div>
           )}
           {uploading && (
-            <div className="absolute inset-0 bg-surface/80 backdrop-blur flex items-center justify-center font-hand text-accent text-lg">
+            <div className="absolute inset-0 bg-sheet/85 flex items-center justify-center font-hand text-accent text-lg">
               upload…
             </div>
           )}

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { Caveat, Fraunces, Inter, Oswald, JetBrains_Mono } from "next/font/google";
+import { Caveat, Courier_Prime, Source_Serif_4, Oswald, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { Nav } from "@/components/Nav";
+import { NotebookHead, NotebookTabs, ThumbTabs } from "@/components/Nav";
+import { SearchPalette } from "@/components/SearchPalette";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { SetupNotice } from "@/components/SetupNotice";
@@ -13,19 +14,8 @@ import { PrivateChat } from "@/components/PrivateChat";
 import { chatAlias } from "@/lib/chat";
 import { SITE_NAME, SITE_URL } from "@/lib/seo";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
+/* Caveat = ma main · Courier Prime = ce que je tape ·
+   Source Serif = ce qui est imprimé · Oswald = ce qui est tamponné */
 const caveat = Caveat({
   variable: "--font-caveat",
   subsets: ["latin"],
@@ -33,7 +23,23 @@ const caveat = Caveat({
   display: "swap",
 });
 
-/* Utilisées par le mode intrusion SC292 */
+const courier = Courier_Prime({
+  variable: "--font-courier",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
+const sourceSerif = Source_Serif_4({
+  variable: "--font-source-serif",
+  subsets: ["latin"],
+  weight: ["400", "600"],
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
+/* Oswald sert aussi les tampons ; JetBrains Mono reste au mode intrusion */
 const oswald = Oswald({
   variable: "--font-oswald",
   subsets: ["latin"],
@@ -95,29 +101,21 @@ export default async function RootLayout({
   let userEmail: string | null = null;
   let role: string | null = null;
   let displayName: string | null = null;
-  let avatarUrl: string | null = null;
-  let eitanPhotoUrl: string | null = null;
   let hackingMode = false;
   let reloadNonce: string | null = null;
 
   if (configured) {
     const supabase = await createClient();
     if (supabase) {
-      const [{ data: { user } }, { data: mainChar }, { data: settings }] =
+      const [{ data: { user } }, { data: settings }] =
         await Promise.all([
           supabase.auth.getUser(),
-          supabase
-            .from("character")
-            .select("photo_url")
-            .eq("is_main", true)
-            .maybeSingle(),
           supabase
             .from("site_settings")
             .select("hacking_mode, reload_nonce")
             .eq("id", 1)
             .maybeSingle(),
         ]);
-      eitanPhotoUrl = (mainChar?.photo_url as string | null) ?? null;
       hackingMode = Boolean(settings?.hacking_mode);
       reloadNonce = (settings?.reload_nonce as string | null) ?? null;
       userEmail = user?.email ?? null;
@@ -125,12 +123,11 @@ export default async function RootLayout({
       if (user) {
         const { data } = await supabase
           .from("profiles")
-          .select("role, display_name, avatar_url")
+          .select("role, display_name")
           .eq("id", user.id)
           .maybeSingle();
         role = data?.role ?? null;
         displayName = data?.display_name ?? null;
-        avatarUrl = (data?.avatar_url as string | null) ?? null;
       }
     }
   }
@@ -138,30 +135,39 @@ export default async function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${inter.variable} ${fraunces.variable} ${caveat.variable} ${oswald.variable} ${jetbrains.variable}`}
+      className={`${caveat.variable} ${courier.variable} ${sourceSerif.variable} ${oswald.variable} ${jetbrains.variable}`}
       suppressHydrationWarning
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className="min-h-screen flex flex-col">
+      <body className="min-h-screen">
         <ThemeProvider>
-          <Nav
+          <div className="notebook">
+            <div className="notebook__spine" aria-hidden />
+            <div className="notebook__holes" aria-hidden />
+            <div className="notebook__margin" aria-hidden />
+            <NotebookHead
+              userId={userId}
+              userEmail={userEmail}
+              role={role}
+              displayName={displayName}
+            />
+            <main className="notebook__page fade-up">
+              {configured ? children : <SetupNotice />}
+            </main>
+            <NotebookTabs />
+            <footer className="relative z-[3] pb-28 lg:pb-8 pl-9 sm:pl-11 lg:pl-[100px] pr-6 lg:pr-[76px] flex items-baseline gap-3 flex-wrap">
+              <span className="hand text-[19px] text-ink-faint">Richman Lane</span>
+              <span className="typed">journal tenu par les proches d&apos;Eitan</span>
+            </footer>
+          </div>
+          <ThumbTabs />
+          <SearchPalette
             userId={userId}
-            userEmail={userEmail}
-            role={role}
-            displayName={displayName}
-            avatarUrl={avatarUrl}
-            eitanPhotoUrl={eitanPhotoUrl}
+            isAdmin={role === "admin"}
+            isLoggedIn={Boolean(userEmail)}
           />
-          <main className="flex-1 w-full max-w-6xl mx-auto px-5 md:px-6 py-9 md:py-12 pb-24 md:pb-16 fade-up">
-            {configured ? children : <SetupNotice />}
-          </main>
-          <footer className="border-t border-border/60 py-8 text-center text-xs text-muted">
-            <span className="font-hand text-base text-accent">Richman Lane</span>
-            <span className="mx-2">·</span>
-            journal tenu par les proches d&apos;Eitan
-          </footer>
           <ImageLightbox />
           <HackingMode
             initialOn={hackingMode}

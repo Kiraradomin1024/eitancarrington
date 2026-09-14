@@ -28,14 +28,14 @@ export default async function RelationsPage() {
   return (
     <div>
       <PageTitle
-        title="Relations"
-        subtitle="Liens entre Eitan et son entourage, ou entre les personnages eux-mêmes."
+        title="toutes les relations"
+        subtitle="la liste au propre de ce que le schéma dessine. entre moi et les autres, ou entre eux."
       />
 
       {canAdd && (
         <div className="mb-8">
           <h2 className="font-serif text-xl text-accent mb-3">
-            Ajouter une relation
+            noter un lien
           </h2>
           <RelationForm npcs={npcList} action={createRelation} />
         </div>

@@ -49,7 +49,7 @@ export function InvestigationForm({
             defaultValue={initial?.description ?? ""}
           />
         </Field>
-        {error && <p className="text-danger text-xs">{error}</p>}
+        {error && <p className="hand text-pen-red text-[18px]">{error}</p>}
         <div className="flex justify-end">
           <Button type="submit" disabled={pending}>
             {pending ? "..." : "Enregistrer"}

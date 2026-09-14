@@ -1,37 +1,43 @@
 "use client";
 
 /**
- * Embeds the Twitch live player using a plain iframe.
- * Automatically detects the current hostname for the required `parent` param.
+ * Le billet agrafé : le lecteur Twitch s'ouvre dans la page, sur une feuille
+ * marquée d'un trait rouge. Iframe simple, le `parent` suit le domaine courant.
  */
-export function TwitchEmbed({ channel }: { channel: string }) {
+export function TwitchEmbed({
+  channel,
+  className = "",
+  rotate = "1.2deg",
+}: {
+  channel: string;
+  className?: string;
+  rotate?: string;
+}) {
   const parent =
     typeof window !== "undefined" ? window.location.hostname : "localhost";
 
   return (
-    <div className="card card-glow overflow-hidden">
-      <div className="flex items-center gap-3 px-5 pt-4 pb-3">
-        <span className="relative flex h-3 w-3">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
-          <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
-        </span>
-        <span className="text-sm font-medium text-foreground">
-          En direct maintenant
-        </span>
+    <div
+      className={`sheet sheet--stapled sheet--flag px-3.5 pt-7 pb-3.5 ${className}`}
+      style={{ transform: `rotate(${rotate})` }}
+    >
+      <div className="typed flex justify-between items-baseline gap-3">
         <a
           href={`https://www.twitch.tv/${channel}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="ml-auto text-xs text-muted hover:text-accent transition"
+          className="hover:text-ink truncate"
         >
-          Ouvrir sur Twitch ↗
+          il streame — {channel} ↗
         </a>
+        <span className="text-pen-red shrink-0">GTA V · en direct</span>
       </div>
       <iframe
         src={`https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${parent}&muted=true`}
-        className="w-full aspect-video relative z-10"
+        className="w-full aspect-video mt-2 block"
         allowFullScreen
         allow="autoplay; encrypted-media"
+        title={`Stream de ${channel}`}
       />
     </div>
   );

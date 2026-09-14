@@ -1,14 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import { canContribute, getCurrentUserAndRole } from "@/lib/auth";
-import { Badge, Card, LinkButton, PageTitle } from "@/components/ui";
+import { LinkButton } from "@/components/ui";
 import { MarkdownContent, extractHeadings } from "@/components/MarkdownContent";
-import type { Npc, Relation } from "@/lib/types";
-import { RELATION_LABELS, STATUS_LABELS } from "@/lib/types";
+import type { Npc, NpcStatus, Relation } from "@/lib/types";
 import { getLiveStatuses } from "@/lib/twitch";
-import { TwitchLiveDot } from "@/components/TwitchLiveDot";
 import { TwitchEmbed } from "@/components/TwitchEmbed";
+import { PageNumber, Photo, Sheet, Spread, StatusStamp } from "@/components/paper";
+import { RelationLine } from "@/components/RelationLine";
+import { STATUS_INK, typedDate } from "@/lib/ink";
 import { slugOrIdColumn } from "@/lib/slug";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DeleteButton } from "@/components/DeleteButton";
 import { deleteNpc } from "../actions";
@@ -81,7 +81,7 @@ export default async function NpcDetail({
   if (!npc) notFound();
   const n = npc as Npc;
 
-  // Relations always join via the row's UUID
+  // Les liens passent toujours par l'UUID de la fiche
   const { data: relsRaw } = await supabase
     .from("relations")
     .select("*")
@@ -96,21 +96,24 @@ export default async function NpcDetail({
     )
   );
   const { data: othersRaw } = otherIds.length
-    ? await supabase.from("npcs").select("id, name, slug").in("id", otherIds)
+    ? await supabase
+        .from("npcs")
+        .select("id, name, slug, status")
+        .in("id", otherIds)
     : { data: [] };
   const otherMap = new Map(
-    (othersRaw ?? []).map(
-      (o: { id: string; name: string; slug: string | null }) => [
-        o.id,
-        { name: o.name, slug: o.slug },
-      ]
-    )
+    (
+      (othersRaw ?? []) as {
+        id: string;
+        name: string;
+        slug: string | null;
+        status: NpcStatus;
+      }[]
+    ).map((o) => [o.id, o])
   );
 
-  // Extract table of contents from description
   const headings = n.description ? extractHeadings(n.description) : [];
 
-  // Twitch live status (cached 60s server-side)
   const liveSet = n.twitch_username
     ? await getLiveStatuses([n.twitch_username])
     : new Set<string>();
@@ -118,7 +121,7 @@ export default async function NpcDetail({
     ? liveSet.has(n.twitch_username.toLowerCase())
     : false;
 
-  // SC292 dossier-access effects
+  // Effets d'accès au dossier SC292
   const hacking = await getHackingMode();
   const dossier: "target" | "closed" | null = /diego\s*suarez|eitan/i.test(
     n.name
@@ -128,217 +131,231 @@ export default async function NpcDetail({
       ? "closed"
       : null;
 
+  const ink = STATUS_INK[n.status];
+  const rows: [string, string | null][] = [
+    ["Âge", n.age != null ? String(n.age) : null],
+    ["Quartier", n.neighborhood],
+    ["Métier", n.occupation],
+    ["Famille", n.family],
+    ["Tél", n.phone_number],
+  ];
+
   return (
     <div>
       <DossierAccess on={hacking} fileName={n.name} dossier={dossier} />
-      <PageTitle
-        title={n.name}
-        subtitle={n.occupation ?? n.family ?? undefined}
-        action={
-          canEdit && (
-            <div className="flex gap-2">
-              <LinkButton
-                href={`/wiki/${n.slug ?? n.id}/edit`}
-                variant="ghost"
-              >
-                Modifier
-              </LinkButton>
-              <DeleteButton
-                action={async () => {
-                  "use server";
-                  await deleteNpc(n.id);
-                }}
-                label="Supprimer"
-              />
-            </div>
-          )
-        }
-      />
 
-      <div className="grid md:grid-cols-3 gap-6">
-        {/* Sidebar — photo, infos, TOC */}
-        <div className="md:col-span-1 space-y-4">
-          <Card>
-            <div
-              className={
-                "relative w-full aspect-square rounded mb-4 border border-border overflow-hidden " +
-                (n.status === "dead" ? "memorial" : "")
-              }
+      {canEdit && (
+        <div className="flex justify-end items-center gap-5 mb-6 flex-wrap">
+          <LinkButton href={`/wiki/${n.slug ?? n.id}/edit`} variant="ghost">
+            corriger la fiche
+          </LinkButton>
+          <DeleteButton
+            action={async () => {
+              "use server";
+              await deleteNpc(n.id);
+            }}
+            label="Déchirer la fiche"
+          />
+        </div>
+      )}
+
+      <Spread
+        left={
+          <div>
+            <Sheet
+              className="!pt-8"
+              rotate="-0.8deg"
+              label="Fiche signalétique"
+              labelRight={`ouverte le ${typedDate(n.created_at, true)}`}
             >
-              {n.photo_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={n.photo_url}
-                  alt={n.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-surface-2 flex items-center justify-center font-serif text-accent text-7xl">
-                  {n.name[0]}
+              <div className="flex flex-col sm:flex-row gap-5">
+                <div className="relative w-[150px] sm:w-[140px] shrink-0">
+                  <Photo
+                    src={n.photo_url}
+                    alt={n.name}
+                    status={n.status}
+                    className="w-full aspect-[132/166]"
+                    corner={18}
+                    live={isLive}
+                    initial={n.name[0]}
+                  />
+                  <span
+                    className="tape"
+                    style={{
+                      top: -9,
+                      left: -14,
+                      width: 56,
+                      height: 20,
+                      transform: "rotate(-27deg)",
+                    }}
+                  />
+                  <p className="typed mt-2">Cliché · {typedDate(n.updated_at)}</p>
+                  {n.status !== "alive" && (
+                    <div className="absolute -left-2 top-[12%] z-10">
+                      <StatusStamp status={n.status} rotate="-8deg" className="stamp--on-photo" />
+                    </div>
+                  )}
                 </div>
+
+                <div className="flex-1 min-w-0">
+                  <h1 className="print text-[28px] sm:text-[30px] font-semibold leading-[1.1]">
+                    {n.name}
+                  </h1>
+                  <p
+                    className="hand text-[21px] mt-0.5"
+                    style={{
+                      color: n.status === "alive" ? "var(--ink-soft)" : ink.tone,
+                    }}
+                  >
+                    {n.status === "alive"
+                      ? n.occupation ?? n.family ?? "en vie"
+                      : ink.note}
+                  </p>
+                  <dl className="mt-3.5 font-typed text-[12.5px] leading-[1.95] text-typed-strong">
+                    {rows.map(([k, v]) => (
+                      <div key={k} className="flex gap-2 min-w-0">
+                        <dt className="shrink-0 uppercase">
+                          {k}
+                          <span className="text-typed" aria-hidden>
+                            {" "}
+                            {".".repeat(Math.max(2, 10 - k.length))}
+                          </span>
+                        </dt>
+                        <dd className="truncate">{v ?? "—"}</dd>
+                      </div>
+                    ))}
+                    {n.twitch_username && (
+                      <div className="flex gap-2 min-w-0">
+                        <dt className="shrink-0 uppercase">
+                          Twitch
+                          <span className="text-typed" aria-hidden>
+                            {" "}
+                            ....
+                          </span>
+                        </dt>
+                        <dd className="truncate">
+                          <a
+                            href={`https://www.twitch.tv/${n.twitch_username}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline hover:text-ink"
+                          >
+                            {n.twitch_username}
+                          </a>
+                          {isLive && (
+                            <span className="text-pen-red"> · en direct</span>
+                          )}
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                </div>
+              </div>
+
+              {n.tags.length > 0 && (
+                <>
+                  <div className="sheet__rule mt-5" />
+                  <p className="font-typed text-[12px] tracking-[0.1em] uppercase leading-[1.9] text-typed-strong">
+                    {n.tags.join(" · ")}
+                  </p>
+                </>
               )}
-            </div>
+            </Sheet>
+
             {n.status === "dead" && (
-              <p className="text-center text-xs uppercase tracking-[0.2em] text-muted -mt-2 mb-4">
-                · En mémoire ·
+              <p
+                className="hand text-pen-red text-[20px] leading-[26px] mt-6"
+                style={{ transform: "rotate(-1deg)" }}
+              >
+                le coin noir, c&apos;est tout. pas de croix, pas de gris partout.
               </p>
             )}
-            <dl className="text-sm space-y-2">
-              <Row k="Statut" v={STATUS_LABELS[n.status]} />
 
-              <Row k="Famille" v={n.family ?? "—"} />
-              <Row k="Quartier" v={n.neighborhood ?? "—"} />
-              <Row k="Occupation" v={n.occupation ?? "—"} />
-              <Row k="Numéro" v={n.phone_number ?? "—"} />
-              {n.twitch_username && (
-                <div className="flex justify-between gap-4 border-b border-border/50 pb-1">
-                  <dt className="text-muted">Streamer</dt>
-                  <dd className="min-w-0">
-                    <a
-                      href={`https://www.twitch.tv/${n.twitch_username}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-accent hover:text-accent-2 hover:underline whitespace-nowrap max-w-full"
-                      title={
-                        isLive
-                          ? `${n.twitch_username} est en live !`
-                          : `Voir la chaîne de ${n.twitch_username}`
-                      }
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        className="w-4 h-4 shrink-0"
-                        aria-hidden
-                      >
-                        <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z" />
-                      </svg>
-                      <span className="truncate">{n.twitch_username}</span>
-                      <TwitchLiveDot isLive={isLive} size={9} />
-                      {isLive && (
-                        <span className="text-[10px] uppercase tracking-wider text-green-600 dark:text-green-400 font-bold">
-                          Live
-                        </span>
-                      )}
-                    </a>
-                  </dd>
+            {headings.length > 0 && (
+              <div className="mt-8">
+                <div className="hand text-[24px] font-semibold hand-under inline-block">
+                  dans cette fiche
                 </div>
-              )}
-            </dl>
-            {n.tags.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-1.5">
-                {n.tags.map((t) => (
-                  <Badge key={t} tone="neutral">
-                    {t}
-                  </Badge>
-                ))}
+                <nav className="mt-2 hand text-[20px] leading-[30px]">
+                  {headings.map((h, i) => (
+                    <a
+                      key={i}
+                      href={`#${h.id}`}
+                      className="block text-ink-soft hover:text-ink"
+                      style={{ paddingLeft: `${(h.level - 2) * 14}px` }}
+                    >
+                      {h.text}
+                    </a>
+                  ))}
+                </nav>
               </div>
             )}
-          </Card>
 
-          {/* Table of contents */}
-          {headings.length > 0 && (
-            <Card>
-              <h3 className="font-display text-sm uppercase tracking-wider text-muted mb-3">
-                Sommaire
-              </h3>
-              <nav className="space-y-1">
-                {headings.map((h, i) => (
-                  <a
-                    key={i}
-                    href={`#${h.id}`}
-                    className="block text-sm text-muted hover:text-accent transition-colors link-fancy"
-                    style={{ paddingLeft: `${(h.level - 2) * 12}px` }}
-                  >
-                    {h.text}
-                  </a>
-                ))}
-              </nav>
-            </Card>
-          )}
-        </div>
-
-        {/* Main content */}
-        <div className="md:col-span-2 space-y-6">
-          <Card>
-            <h2 className="font-display text-2xl text-accent mb-3 title-rule">
-              Description
-            </h2>
-            {n.description ? (
-              <div className="hk-redact-zone">
-                <MarkdownContent content={n.description} />
-              </div>
-            ) : (
-              <p className="text-muted italic">Aucune description.</p>
+            {isLive && n.twitch_username && (
+              <TwitchEmbed
+                channel={n.twitch_username}
+                className="mt-8"
+                rotate="-0.8deg"
+              />
             )}
-          </Card>
 
-          <Card>
-            <h2 className="font-display text-2xl text-accent mb-3 title-rule">
-              Liens ({rels.length})
+            <PageNumber>3</PageNumber>
+          </div>
+        }
+        right={
+          <div>
+            <h2 className="hand text-[30px] md:text-[32px] font-semibold leading-none">
+              {n.status === "dead" ? "qui comptait" : "qui compte"}, et comment
             </h2>
             {rels.length === 0 ? (
-              <p className="text-muted italic">Aucune relation enregistrée.</p>
+              <p className="hand text-[21px] text-ink-faint mt-3">
+                aucun lien noté pour l&apos;instant.
+              </p>
             ) : (
-              <ul className="space-y-2">
+              <ul className="mt-4 hand text-[21px] md:text-[23px] leading-[36px]">
                 {rels.map((r) => {
                   const isSource = r.source_npc_id === n.id;
                   const otherId = isSource ? r.target_npc_id : r.source_npc_id;
-                  const otherInfo = otherId ? otherMap.get(otherId) : null;
-                  const otherName = otherInfo?.name ?? "Inconnu";
-                  const otherHref = otherInfo
-                    ? `/wiki/${otherInfo.slug ?? otherId}`
-                    : null;
+                  const other = otherId ? otherMap.get(otherId) : null;
                   return (
-                    <li
+                    <RelationLine
                       key={r.id}
-                      className="flex items-center gap-3 p-2 rounded hover:bg-surface-2"
-                    >
-                      <Badge tone="accent">{RELATION_LABELS[r.type]}</Badge>
-                      {otherHref ? (
-                        <Link
-                          href={otherHref}
-                          className="text-foreground hover:text-foreground"
-                        >
-                          {otherName}
-                        </Link>
-                      ) : (
-                        <Link
-                          href="/wiki/eitan"
-                          className="text-foreground hover:underline"
-                        >
-                          Eitan
-                        </Link>
-                      )}
-                      {r.description && (
-                        <span className="text-muted text-sm italic ml-2">
-                          — {r.description}
-                        </span>
-                      )}
-                    </li>
+                      type={r.type}
+                      name={other ? other.name : "Eitan"}
+                      href={
+                        other ? `/wiki/${other.slug ?? other.id}` : "/wiki/eitan"
+                      }
+                      status={other?.status ?? "alive"}
+                      description={r.description}
+                    />
                   );
                 })}
               </ul>
             )}
-          </Card>
+            <p className="hand text-[19px] text-ink-soft mt-4 max-w-[34ch]">
+              chaque type de lien a son trait : plein, double, rayé.
+            </p>
 
-          {/* Twitch live embed */}
-          {isLive && n.twitch_username && (
-            <TwitchEmbed channel={n.twitch_username} />
-          )}
+            <Sheet className="mt-8 !pt-8" rotate={(n.description?.length ?? 0) > 3000 ? "0.1deg" : "0.4deg"} label="Ce qu'on sait">
+              {n.description ? (
+                <div className="hk-redact-zone">
+                  <MarkdownContent content={n.description} />
+                </div>
+              ) : (
+                <p className="hand text-[21px] text-ink-faint">
+                  rien de tapé pour l&apos;instant.
+                </p>
+              )}
+            </Sheet>
 
-          <HistoryPanel entityType="npcs" entityId={n.id} />
-        </div>
-      </div>
-    </div>
-  );
-}
+            <div className="mt-8">
+              <HistoryPanel entityType="npcs" entityId={n.id} />
+            </div>
 
-function Row({ k, v }: { k: string; v: string }) {
-  return (
-    <div className="flex justify-between gap-4 border-b border-border/50 pb-1">
-      <dt className="text-muted">{k}</dt>
-      <dd className="text-foreground text-right">{v}</dd>
+            <PageNumber align="right">4</PageNumber>
+          </div>
+        }
+      />
     </div>
   );
 }

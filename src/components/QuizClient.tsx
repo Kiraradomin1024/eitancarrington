@@ -1,5 +1,6 @@
 "use client";
 
+import { Sheet } from "@/components/paper";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { QuizQuestion, QuizAttempt, QuizOption } from "@/lib/types";
 import {
@@ -125,12 +126,10 @@ export function QuizClient({
   }
 
   return (
-    <div className="grid lg:grid-cols-[1fr_320px] gap-6">
-      <div>
+    <div className="grid lg:grid-cols-[1fr_300px] gap-10 lg:gap-12 items-start">
+      <div className="min-w-0">
         {error && (
-          <div className="card p-3 text-sm text-danger bg-danger/10 border border-danger/30 mb-3">
-            {error}
-          </div>
+          <p className="hand text-[20px] text-pen-red mb-3">{error}</p>
         )}
 
         {phase === "intro" && (
@@ -189,17 +188,15 @@ export function QuizClient({
       </div>
 
       {/* Sidebar */}
-      <aside className="space-y-3">
+      <aside className="space-y-6">
         {isAdmin && (
-          <div className="card p-3">
-            <button
-              type="button"
-              onClick={() => setAdminPanel(true)}
-              className="w-full px-3 py-2.5 text-[11px] uppercase tracking-[0.2em] border border-border text-muted hover:border-accent/60 hover:text-accent transition-colors"
-            >
-              ⚙️ Gérer les questions
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setAdminPanel(true)}
+            className="hand text-[20px] text-ink-soft underline underline-offset-4 hover:text-ink"
+          >
+            préparer les questions
+          </button>
         )}
         <Leaderboard rows={leaderboard} userId={userId} />
       </aside>
@@ -251,75 +248,64 @@ function IntroScreen({
 }) {
   if (totalQuestions === 0) {
     return (
-      <div className="card p-10 text-center">
-        <p className="font-hand text-2xl text-accent mb-2">
-          rien à grignoter
-        </p>
-        <p className="text-muted text-sm">
-          Aucune question n&apos;a encore été ajoutée.
+      <div className="py-10">
+        <p className="hand text-[28px] text-ink-faint">page blanche.</p>
+        <p className="hand text-[21px] text-ink-soft">
+          aucune question n&apos;a encore été préparée.
         </p>
       </div>
     );
   }
   if (!isLoggedIn) {
     return (
-      <div className="card p-10 text-center">
-        <p className="font-hand text-2xl text-accent mb-2">
+      <Sheet className="!pt-9 max-w-[560px]" rotate="-0.6deg" label="Interro surprise">
+        <p className="hand text-[28px] font-semibold leading-tight">
           connecte-toi pour jouer
         </p>
-        <p className="text-muted text-sm">
+        <p className="print text-[15.5px] leading-[1.7] mt-2">
           {totalQuestions > 1
             ? `${totalQuestions} questions t'attendent.`
             : "1 question t'attend."}{" "}
-          Une connexion suffit pour participer au classement.
+          Une connexion suffit pour entrer au tableau des notes.
         </p>
-      </div>
+      </Sheet>
     );
   }
   return (
-    <div className="card p-10 text-center space-y-5">
-      <p className="font-hand text-2xl text-accent">prêt ?</p>
-      <h2 className="font-display text-4xl text-foreground">
-        Quizz d&apos;Eitan
+    <Sheet className="!pt-9 max-w-[620px]" rotate="-0.6deg" label="Interro surprise" labelRight={`${totalQuestions} questions`}>
+      <p className="hand text-[24px] text-pen-red" style={{ transform: "rotate(-2deg)" }}>
+        prêt ?
+      </p>
+      <h2 className="print text-[32px] sm:text-[38px] font-semibold leading-[1.1] mt-1">
+        Combien tu sais sur Eitan ?
       </h2>
-      <p className="text-muted text-sm max-w-md mx-auto leading-relaxed">
-        Une seule chance par question. Réponds vite, réponds bien — tes scores
-        comptent pour le classement permanent.
+      <p className="print text-[15.5px] leading-[1.7] mt-3 max-w-[48ch]">
+        Une seule chance par question. Réponds vite, réponds bien : tes notes
+        comptent pour le tableau permanent.
       </p>
 
       {previousTotal > 0 && (
-        <div className="inline-flex items-center gap-3 text-xs text-muted border border-border px-4 py-2">
-          <span>
-            Déjà joué :{" "}
-            <strong className="text-foreground">
-              {previousScore}/{previousTotal}
-            </strong>
-          </span>
-          <span className="opacity-50">·</span>
-          <span>
-            Restant :{" "}
-            <strong className={remaining === 0 ? "text-muted" : "text-accent"}>
-              {remaining}
-            </strong>
-          </span>
-        </div>
+        <p className="font-typed text-[12px] uppercase tracking-[0.1em] text-typed-strong mt-5">
+          déjà rendu : {previousScore}/{previousTotal} · reste : {remaining}
+        </p>
       )}
 
-      <div className="pt-2">
+      <div className="mt-7">
         <button
           type="button"
           onClick={onStart}
           disabled={remaining === 0}
-          className="px-9 py-4 text-[11px] uppercase tracking-[0.22em] border border-accent text-accent hover:bg-accent hover:text-background transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="stamp text-ink disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{ mixBlendMode: "normal", opacity: 1 }}
         >
           {remaining === 0
-            ? "Tu as tout répondu 🏆"
+            ? "Tout rendu"
             : previousTotal > 0
               ? "Continuer"
               : "Commencer"}
         </button>
       </div>
-    </div>
+    </Sheet>
   );
 }
 
@@ -341,96 +327,94 @@ function QuestionCard({
   onChoose: (opt: QuizOption) => void;
 }) {
   const locked = !!revealedCorrect;
-  const progress = ((indexInOrder + (locked ? 1 : 0)) / orderTotal) * 100;
   return (
-    <div className="quiz-card-in space-y-7">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3">
-        <span className="meta-label">
-          Question {indexInOrder + 1} <span className="opacity-50">/ {orderTotal}</span>
-        </span>
-        {question.category && (
-          <span className="text-[10px] uppercase tracking-[0.2em] text-accent border border-accent/40 px-2.5 py-1">
-            {question.category}
-          </span>
-        )}
-      </div>
-
-      {/* Progress bar */}
-      <div className="h-0.5 bg-border overflow-hidden">
-        <div
-          className="h-full bg-accent transition-all duration-500"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-
-      {/* Question */}
-      <h2 className="font-display font-light text-3xl md:text-4xl text-foreground leading-[1.2]">
+    <Sheet
+      className="!pt-9 quiz-card-in"
+      rotate="-0.4deg"
+      label={`Question ${indexInOrder + 1} / ${orderTotal}`}
+      labelRight={question.category ?? undefined}
+    >
+      <h2 className="print text-[26px] md:text-[31px] font-semibold leading-[1.2] max-w-[34ch]">
         {question.question}
       </h2>
 
-      {/* Options */}
-      <div className="hairline-grid sm:grid-cols-2">
+      <ol className="mt-6 space-y-2">
         {OPTIONS.map((opt) => {
           const text = question[`option_${opt}` as const];
           const isChosen = chosen === opt;
           const isCorrect = revealedCorrect === opt;
-          const isWrongChosen = isChosen && revealedCorrect && !isCorrect;
-          let tone = "text-foreground hover:bg-surface-2";
-          if (locked) {
-            if (isCorrect) tone = "text-success bg-success/10";
-            else if (isWrongChosen) tone = "text-danger bg-danger/10";
-            else tone = "text-muted opacity-55";
-          } else if (isChosen) {
-            tone = "text-accent bg-accent-soft";
-          }
+          const isWrongChosen = isChosen && !!revealedCorrect && !isCorrect;
           return (
-            <button
-              key={opt}
-              type="button"
-              disabled={disabled}
-              onClick={() => onChoose(opt)}
-              className={
-                "group relative text-left px-6 py-5 transition-colors flex items-center gap-5 disabled:cursor-default " +
-                tone
-              }
-            >
-              <span
+            <li key={opt}>
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => onChoose(opt)}
                 className={
-                  "font-display text-base shrink-0 w-4 transition-colors " +
-                  (locked && isCorrect
-                    ? "text-success"
-                    : locked && isWrongChosen
-                      ? "text-danger"
-                      : isChosen
-                        ? "text-accent"
-                        : "text-muted group-hover:text-accent")
+                  "group w-full text-left flex items-baseline gap-4 py-2 px-1 disabled:cursor-default " +
+                  (locked && !isCorrect && !isWrongChosen ? "opacity-50" : "")
                 }
               >
-                {OPTION_LABEL[opt]}
-              </span>
-              <span className="flex-1 text-base leading-snug">{text}</span>
-              {locked && isCorrect && (
-                <span className="text-success shrink-0">✓</span>
-              )}
-              {locked && isWrongChosen && (
-                <span className="text-danger shrink-0">✕</span>
-              )}
-            </button>
+                <span
+                  className={
+                    "font-typed text-[13px] w-7 h-7 shrink-0 flex items-center justify-center " +
+                    (!locked ? "group-hover:text-ink" : "")
+                  }
+                  style={{
+                    border: isCorrect
+                      ? "2.5px solid var(--pen-green)"
+                      : isWrongChosen || isChosen
+                        ? "2.5px solid var(--pen-red)"
+                        : "1.5px solid var(--sheet-rule)",
+                    borderRadius: "48% 52% 46% 54% / 52% 46% 54% 48%",
+                    color: isCorrect ? "var(--pen-green)" : isChosen ? "var(--pen-red)" : "var(--typed)",
+                  }}
+                >
+                  {OPTION_LABEL[opt]}
+                </span>
+                <span
+                  className={
+                    "print text-[17px] leading-snug flex-1 " +
+                    (isWrongChosen ? "line-through decoration-2 decoration-[color:var(--pen-red)]" : "")
+                  }
+                >
+                  {text}
+                </span>
+                {locked && isCorrect && (
+                  <span className="hand text-[22px] text-pen-green shrink-0">juste</span>
+                )}
+                {locked && isWrongChosen && (
+                  <span className="hand text-[22px] text-pen-red shrink-0">faux</span>
+                )}
+              </button>
+            </li>
           );
         })}
+      </ol>
+
+      <div className="mt-6 h-[3px]" style={{ background: "var(--sheet-rule)" }}>
+        <div
+          className="h-full transition-all duration-500"
+          style={{
+            width: `${((indexInOrder + (locked ? 1 : 0)) / orderTotal) * 100}%`,
+            background: "var(--ink)",
+          }}
+        />
       </div>
 
       <style jsx>{`
         @keyframes quiz-card-in {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
+          from { opacity: 0; transform: translateY(8px) rotate(-0.4deg); }
+          to { opacity: 1; transform: translateY(0) rotate(-0.4deg); }
         }
-        .quiz-card-in {
+        :global(.quiz-card-in) {
           animation: quiz-card-in 0.25s ease-out;
         }
+        @media (prefers-reduced-motion: reduce) {
+          :global(.quiz-card-in) { animation: none; }
+        }
       `}</style>
-    </div>
+    </Sheet>
   );
 }
 
@@ -445,60 +429,33 @@ function FeedbackBar({
   isLast: boolean;
   onNext: () => void;
 }) {
-  // Autofocus the next button so Enter/Space works without aiming
+  // Le bouton suivant prend le focus : Entrée ou Espace suffisent
   const btnRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     btnRef.current?.focus();
   }, []);
   return (
-    <div
-      className={
-        "mt-4 card p-4 flex items-center justify-between gap-3 quiz-fb-in " +
-        (wasCorrect
-          ? "border-success/40 bg-success/5"
-          : "border-danger/40 bg-danger/5")
-      }
-    >
-      <div className="flex items-center gap-3">
-        <span
-          className={
-            "w-10 h-10 flex items-center justify-center text-background text-xl " +
-            (wasCorrect ? "bg-success" : "bg-danger")
-          }
-        >
-          {wasCorrect ? "✓" : "✕"}
-        </span>
-        <div>
-          <div className="font-medium text-foreground">
-            {wasCorrect ? "Bonne réponse !" : "Raté"}
-          </div>
-          {!wasCorrect && revealedCorrect && (
-            <div className="text-xs text-muted">
-              La bonne :{" "}
-              <strong className="text-foreground">
-                {OPTION_LABEL[revealedCorrect]}
-              </strong>
-            </div>
-          )}
-        </div>
-      </div>
+    <div className="mt-6 flex items-center justify-between gap-4 flex-wrap">
+      <p
+        className={"hand text-[28px] leading-tight " + (wasCorrect ? "text-pen-green" : "text-pen-red")}
+        style={{ transform: "rotate(-1.5deg)" }}
+      >
+        {wasCorrect ? "bien vu." : "raté."}
+        {!wasCorrect && revealedCorrect && (
+          <span className="text-[21px] text-ink-soft">
+            {" "}c&apos;était la {OPTION_LABEL[revealedCorrect]}.
+          </span>
+        )}
+      </p>
       <button
         ref={btnRef}
         type="button"
         onClick={onNext}
-        className="px-6 py-3 text-[11px] uppercase tracking-[0.22em] border border-accent text-accent hover:bg-accent hover:text-background transition-colors"
+        className="stamp stamp--sm text-ink"
+        style={{ mixBlendMode: "normal", opacity: 1 }}
       >
-        {isLast ? "Voir le score →" : "Suivante →"}
+        {isLast ? "Voir la note" : "Question suivante"}
       </button>
-      <style jsx>{`
-        @keyframes quiz-fb-in {
-          from { opacity: 0; transform: translateY(-6px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .quiz-fb-in {
-          animation: quiz-fb-in 0.2s ease-out;
-        }
-      `}</style>
     </div>
   );
 }
@@ -521,46 +478,39 @@ function DoneScreen({
   const ratio = sessionTotal === 0 ? 0 : sessionScore / sessionTotal;
   const verdict =
     ratio === 1
-      ? "Sans-faute. Tu connais Eitan mieux qu'Eitan."
+      ? "sans-faute. tu connais Eitan mieux qu'Eitan."
       : ratio >= 0.75
-        ? "Bien joué."
+        ? "bien joué."
         : ratio >= 0.5
-          ? "Pas mal, mais y'a mieux."
+          ? "pas mal, mais y'a mieux."
           : ratio > 0
-            ? "Aïe."
-            : "Catastrophe.";
+            ? "aïe."
+            : "catastrophe.";
   const remaining = totalQuestions - totalAnswered;
   return (
-    <div className="card p-10 text-center space-y-5">
-      <p className="font-hand text-2xl text-accent">terminé</p>
-      <div className="font-display text-6xl text-foreground tabular-nums">
-        {sessionScore}
-        <span className="text-muted text-3xl">/{sessionTotal}</span>
-      </div>
-      <p className="text-foreground/85">{verdict}</p>
-      <div className="text-xs text-muted">
-        Total cumulé :{" "}
-        <strong className="text-foreground">
-          {totalScore} / {totalAnswered}
-        </strong>
-        {remaining > 0 && (
-          <>
-            <span className="mx-2 opacity-50">·</span>
-            {remaining} question{remaining > 1 ? "s" : ""} restante
-            {remaining > 1 ? "s" : ""}
-          </>
-        )}
-      </div>
-      <div className="pt-2">
-        <button
-          type="button"
-          onClick={onRestart}
-          className="px-6 py-3 text-[11px] uppercase tracking-[0.22em] border border-border text-muted hover:border-accent/60 hover:text-accent transition-colors"
+    <Sheet className="!pt-9 max-w-[560px]" rotate="0.5deg" label="Copie rendue">
+      <div className="flex items-end gap-6 flex-wrap">
+        <div
+          className="hand text-pen-red leading-none px-4 py-2"
+          style={{ border: "3px solid var(--pen-red)", borderRadius: "50% 46% 52% 48% / 48% 54% 46% 52%", transform: "rotate(-6deg)" }}
         >
-          Retour au menu
-        </button>
+          <span className="text-[64px] font-semibold">{sessionScore}</span>
+          <span className="text-[34px]">/{sessionTotal}</span>
+        </div>
+        <p className="hand text-[26px] leading-tight text-pen-red max-w-[18ch]">{verdict}</p>
       </div>
-    </div>
+      <p className="font-typed text-[12px] uppercase tracking-[0.1em] text-typed-strong mt-6">
+        total : {totalScore} / {totalAnswered}
+        {remaining > 0 && ` · ${remaining} question${remaining > 1 ? "s" : ""} restante${remaining > 1 ? "s" : ""}`}
+      </p>
+      <button
+        type="button"
+        onClick={onRestart}
+        className="hand text-[20px] text-ink-soft underline underline-offset-4 hover:text-ink mt-5"
+      >
+        revenir au début
+      </button>
+    </Sheet>
   );
 }
 
@@ -581,16 +531,16 @@ function Leaderboard({
     myIndex >= LEADERBOARD_TOP ? { row: rows[myIndex], rank: myIndex + 1 } : null;
 
   return (
-    <div className="card p-4">
-      <div className="text-xs uppercase tracking-wider text-muted mb-3 font-medium">
-        Classement
+    <div>
+      <div className="hand text-[26px] font-semibold hand-under inline-block">
+        le tableau des notes
       </div>
       {rows.length === 0 ? (
-        <p className="text-sm text-muted italic">
-          Personne n&apos;a encore joué.
+        <p className="hand text-[20px] text-ink-faint mt-2">
+          personne n&apos;a encore rendu sa copie.
         </p>
       ) : (
-        <ol className="space-y-1">
+        <ol className="mt-3">
           {top.map((row, i) => (
             <LeaderboardRowItem
               key={row.user_id}
@@ -601,17 +551,10 @@ function Leaderboard({
           ))}
           {myRow && (
             <>
-              <li
-                aria-hidden="true"
-                className="text-center text-muted text-xs py-1 select-none"
-              >
-                · · ·
+              <li aria-hidden="true" className="hand text-ink-faint text-[20px] pl-8 select-none">
+                …
               </li>
-              <LeaderboardRowItem
-                row={myRow.row}
-                rank={myRow.rank}
-                isMe
-              />
+              <LeaderboardRowItem row={myRow.row} rank={myRow.rank} isMe />
             </>
           )}
         </ol>
@@ -630,40 +573,21 @@ function LeaderboardRowItem({
   isMe: boolean;
 }) {
   return (
-    <li
-      className={
-        "flex items-center gap-2 px-2 py-1.5 rounded-none " +
-        (isMe ? "bg-accent-soft" : "")
-      }
-    >
-      <span className="w-7 text-xs font-medium shrink-0 text-center">
-        {rank === 1
-          ? "🥇"
-          : rank === 2
-            ? "🥈"
-            : rank === 3
-              ? "🥉"
-              : `#${rank}`}
+    <li className="flex items-baseline gap-3 hand text-[21px] leading-[32px]">
+      <span
+        className={"w-6 text-right shrink-0 " + (rank <= 3 ? "text-pen-red font-semibold" : "text-ink-faint")}
+      >
+        {rank}.
       </span>
-      {row.avatar_url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={row.avatar_url}
-          alt=""
-          className="w-6 h-6 rounded-full object-cover border border-border"
-          data-no-lightbox=""
-        />
-      ) : (
-        <span className="w-6 h-6 rounded-full bg-gradient-to-br from-accent-2 to-accent-3 text-white text-[10px] flex items-center justify-center shrink-0">
-          {row.display_name[0]?.toUpperCase() ?? "?"}
-        </span>
-      )}
-      <span className="text-sm text-foreground/90 truncate flex-1">
+      <span
+        className={"truncate flex-1 " + (isMe ? "font-semibold" : "")}
+        style={isMe ? { borderBottom: "2px solid var(--pen-red)" } : undefined}
+      >
         {row.display_name}
+        {isMe && <span className="text-pen-red text-[17px]"> (toi)</span>}
       </span>
-      <span className="text-xs text-muted tabular-nums shrink-0">
-        {row.score}
-        <span className="opacity-60">/{row.total}</span>
+      <span className="font-typed text-[12px] text-typed-strong tabular-nums shrink-0">
+        {row.score}/{row.total}
       </span>
     </li>
   );
@@ -686,23 +610,24 @@ function AdminPanel({
 }) {
   return (
     <div
-      className="fixed inset-0 z-[1100] bg-black/60 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[1100] flex items-center justify-center p-4"
+      style={{ background: "rgba(20, 16, 10, 0.55)" }}
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface border border-border rounded-none shadow-2xl w-full max-w-2xl p-6 space-y-4 max-h-[90vh] overflow-hidden flex flex-col"
+        className="sheet sheet--stapled w-full max-w-2xl px-6 pt-9 pb-6 space-y-4 max-h-[90vh] overflow-hidden flex flex-col"
       >
         <div className="flex items-center justify-between gap-3">
-          <h2 className="font-display text-2xl text-foreground">
-            Gérer les questions
+          <h2 className="hand text-[30px] font-semibold text-ink leading-none">
+            les questions de l&apos;interro
           </h2>
           <button
             type="button"
             onClick={onAdd}
-            className="px-4 py-2 text-[11px] uppercase tracking-[0.2em] border border-accent text-accent hover:bg-accent hover:text-background transition-colors"
+            className="stamp stamp--sm text-ink"
           >
-            + Nouvelle
+            Nouvelle
           </button>
         </div>
         {questions.length === 0 ? (
@@ -712,20 +637,16 @@ function AdminPanel({
             {questions.map((q) => (
               <li
                 key={q.id}
-                className="border border-border rounded-none px-3 py-2 flex items-start gap-3 hover:bg-surface-2 transition-colors"
+                className="border-b border-[color:var(--sheet-rule)] px-1 py-2 flex items-start gap-3"
               >
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs uppercase tracking-wider text-muted mb-0.5 flex items-center gap-2">
-                    {q.category && (
-                      <span className="px-2 py-0.5 border border-accent/40 text-accent text-[10px] uppercase tracking-[0.16em]">
-                        {q.category}
-                      </span>
-                    )}
+                  <div className="typed mb-0.5 flex items-center gap-2">
+                    {q.category && <span>{q.category} ·</span>}
                     <span className="text-[10px]">
                       bonne : <strong>{OPTION_LABEL[q.correct_option]}</strong>
                     </span>
                   </div>
-                  <p className="text-sm text-foreground/90 line-clamp-2">
+                  <p className="print text-[15px] line-clamp-2">
                     {q.question}
                   </p>
                 </div>
@@ -733,16 +654,16 @@ function AdminPanel({
                   <button
                     type="button"
                     onClick={() => onEdit(q)}
-                    className="text-xs px-2 py-1 rounded-full text-muted hover:text-foreground hover:bg-surface-2"
+                    className="hand text-[18px] text-ink-soft underline underline-offset-4 hover:text-ink px-1"
                   >
-                    modifier
+                    corriger
                   </button>
                   <button
                     type="button"
                     onClick={() => onDelete(q.id)}
-                    className="text-xs px-2 py-1 rounded-full text-muted hover:text-danger hover:bg-danger/10"
+                    className="hand text-[18px] text-pen-red/80 underline underline-offset-4 hover:text-pen-red px-1"
                   >
-                    supprimer
+                    rayer
                   </button>
                 </div>
               </li>
@@ -753,9 +674,9 @@ function AdminPanel({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-full text-sm text-muted hover:text-foreground"
+            className="hand text-[20px] text-ink-soft underline underline-offset-4 hover:text-ink"
           >
-            Fermer
+            fermer
           </button>
         </div>
       </div>
@@ -793,20 +714,21 @@ function QuestionForm({
 
   return (
     <div
-      className="fixed inset-0 z-[1200] bg-black/60 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[1200] flex items-center justify-center p-4"
+      style={{ background: "rgba(20, 16, 10, 0.55)" }}
       onClick={onClose}
     >
       <form
         onSubmit={onSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface border border-border rounded-none shadow-2xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+        className="sheet sheet--stapled w-full max-w-lg px-6 pt-9 pb-6 space-y-4 max-h-[90vh] overflow-y-auto"
       >
-        <h2 className="font-display text-2xl text-foreground">
-          {isEdit ? "Modifier la question" : "Nouvelle question"}
+        <h2 className="hand text-[30px] font-semibold text-ink leading-none">
+          {isEdit ? "corriger la question" : "une nouvelle question"}
         </h2>
 
         <div>
-          <span className="text-xs uppercase tracking-wider text-muted mb-1.5 block font-medium">
+          <span className="typed mb-1 block">
             Question *
           </span>
           <textarea
@@ -819,7 +741,7 @@ function QuestionForm({
         </div>
 
         <div>
-          <span className="text-xs uppercase tracking-wider text-muted mb-1.5 block font-medium">
+          <span className="typed mb-1 block">
             Catégorie (optionnel)
           </span>
           <input
@@ -830,7 +752,7 @@ function QuestionForm({
         </div>
 
         <div className="space-y-3">
-          <span className="text-xs uppercase tracking-wider text-muted block font-medium">
+          <span className="typed block">
             Réponses (coche la bonne)
           </span>
           {OPTIONS.map((opt) => (
@@ -844,7 +766,7 @@ function QuestionForm({
                   defaultChecked={q?.correct_option === opt}
                   className="!w-4 !h-4 !p-0 accent-accent"
                 />
-                <span className="w-6 h-6 rounded-full bg-surface-2 text-muted text-xs font-medium flex items-center justify-center">
+                <span className="font-typed w-6 h-6 text-typed text-[12px] flex items-center justify-center" style={{ border: "1.5px solid var(--sheet-rule)", borderRadius: "50%" }}>
                   {OPTION_LABEL[opt]}
                 </span>
               </label>
@@ -860,23 +782,23 @@ function QuestionForm({
         </div>
 
         {error && (
-          <p className="text-sm text-danger bg-danger/10 border border-danger/30 rounded-none px-3 py-2">
+          <p className="hand text-[19px] text-pen-red">
             {error}
           </p>
         )}
 
-        <div className="flex items-center justify-end gap-2 pt-2">
+        <div className="flex items-center justify-end gap-5 pt-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-full text-sm text-muted hover:text-foreground"
+            className="hand text-[20px] text-ink-soft underline underline-offset-4 hover:text-ink"
           >
-            Annuler
+            laisser tomber
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="px-4 py-2 rounded-full text-sm font-medium bg-foreground text-background hover:opacity-90 disabled:opacity-50"
+            className="stamp stamp--sm text-ink disabled:opacity-50"
           >
             {submitting ? "…" : isEdit ? "Enregistrer" : "Créer"}
           </button>

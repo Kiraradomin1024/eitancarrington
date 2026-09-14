@@ -70,14 +70,12 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="max-w-sm mx-auto mt-12">
-      <h1 className="font-serif text-3xl text-foreground text-center mb-2">
-        Inscription
-      </h1>
-      <p className="text-muted text-sm text-center mb-8">
-        Une fois inscrit·e, tu pourras consulter et contribuer au dossier.
+    <div className="max-w-sm mx-auto mt-10">
+      <h1 className="hand text-[44px] font-semibold leading-none">se présenter</h1>
+      <p className="hand text-[21px] text-ink-soft mt-2 mb-8">
+        une fois inscrit·e, un admin valide et tu pourras écrire dans le cahier.
       </p>
-      <Card>
+      <Card className="card-glow !pt-9">
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <Field label="Pseudo" hint="Sera ton identifiant de connexion">
             <input
@@ -98,13 +96,13 @@ export default function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
             />
           </Field>
-          {error && <p className="text-danger text-xs">{error}</p>}
+          {error && <p className="hand text-pen-red text-[18px]">{error}</p>}
           <Button type="submit" disabled={loading}>
             {loading ? "..." : "Créer le compte"}
           </Button>
           <Link
             href="/login"
-            className="text-center text-xs text-muted hover:text-accent"
+            className="text-center hand text-[19px] text-ink-soft underline underline-offset-4 hover:text-ink"
           >
             Déjà inscrit ? Se connecter
           </Link>

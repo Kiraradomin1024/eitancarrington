@@ -1,9 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
-import { Card, LinkButton } from "@/components/ui";
 import type { Character } from "@/lib/types";
 import { getLiveStatuses } from "@/lib/twitch";
-import { TwitchLiveDot } from "@/components/TwitchLiveDot";
 import { TwitchEmbed } from "@/components/TwitchEmbed";
+import { PageNumber, Photo, Sheet, Spread } from "@/components/paper";
 import Link from "next/link";
 
 export default async function Home() {
@@ -18,36 +17,39 @@ export default async function Home() {
 
   const c = data as Character | null;
 
-  const [{ count: npcCount }, { data: maxDayRow }, { count: invCount }] =
-    await Promise.all([
-      supabase.from("npcs").select("*", { count: "exact", head: true }),
-      supabase
-        .from("days")
-        .select("day_number")
-        .not("day_number", "is", null)
-        .order("day_number", { ascending: false })
-        .limit(1),
-      supabase
-        .from("investigations")
-        .select("*", { count: "exact", head: true }),
-    ]);
-  const latestDay = (maxDayRow?.[0] as { day_number: number } | undefined)?.day_number ?? 0;
+  const [
+    { count: npcCount },
+    { data: maxDayRow },
+    { count: openInvCount },
+    { data: { user } },
+  ] = await Promise.all([
+    supabase.from("npcs").select("*", { count: "exact", head: true }),
+    supabase
+      .from("days")
+      .select("day_number")
+      .not("day_number", "is", null)
+      .order("day_number", { ascending: false })
+      .limit(1),
+    supabase
+      .from("investigations")
+      .select("*", { count: "exact", head: true })
+      .in("status", ["open", "in_progress"]),
+    supabase.auth.getUser(),
+  ]);
+  const latestDay =
+    (maxDayRow?.[0] as { day_number: number } | undefined)?.day_number ?? 0;
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  let role: string | null = null;
+  let canEdit = false;
   if (user) {
     const { data: p } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", user.id)
       .maybeSingle();
-    role = p?.role ?? null;
+    canEdit = p?.role === "admin";
   }
-  const canEdit = role === "admin";
 
-  // Twitch live status for Eitan's streamer (cached 60s server-side)
+  // Statut Twitch d'Eitan (mis en cache côté serveur)
   const liveSet = c?.twitch_username
     ? await getLiveStatuses([c.twitch_username])
     : new Set<string>();
@@ -55,157 +57,195 @@ export default async function Home() {
     ? liveSet.has(c.twitch_username.toLowerCase())
     : false;
 
+  const name = c?.name ?? "Eitan Carrington";
+  const [first, ...rest] = name.split(" ");
+  const age = c?.age ?? 24;
+
+  const bioParas = (
+    c?.bio ??
+    "Dernier né de la famille Carrington. Vit à Richman Lane mais ne se reconnait pas dans les délires de sa famille et des autres bourgeois du quartier."
+  )
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  const familyLines = (
+    c?.background ??
+    "Famille juive aisée. Mère : Blair Carrington. Frère : Elias Carrington."
+  )
+    .split(/\n+/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+
   return (
-    <div className="space-y-20">
-      {/* Hero — dossier ouvert : identité à gauche, cliché à droite */}
-      <section className="grid lg:grid-cols-[1.15fr_.85fr] gap-11 lg:gap-16 pt-4 md:pt-6 pb-4 items-start">
-        <div>
-          <p className="eyebrow mb-7">
-            Dossier n° EC-021 · Richman Lane, Los Santos
-          </p>
+    <Spread
+      left={
+        <div className="relative">
+          <span className="label-kraft">N° EC-021 · Richman Lane, Los Santos</span>
 
-          <h1 className="font-display font-light text-[44px] md:text-6xl lg:text-7xl tracking-tight leading-[1] text-balance">
-            {c?.name ?? "Eitan Carrington"}
-          </h1>
-
-          <div className="w-16 h-px bg-border-strong my-6 md:my-7" />
-
-          <p className="text-[17px] md:text-lg text-muted leading-relaxed max-w-[52ch]">
-            {c?.age ? `${c.age} ans, ` : "24 ans, "}
-            dernier des Carrington.
-          </p>
-
-          <div className="flex gap-3 mt-8 md:mt-9 flex-col sm:flex-row sm:flex-wrap">
-            <LinkButton href="/journal" variant="primary">
-              Ouvrir le journal
-            </LinkButton>
-            <LinkButton href="/wiki" variant="ghost">
-              Les personnages
-            </LinkButton>
-            {canEdit && (
-              <LinkButton href="/admin/character" variant="ghost">
-                Modifier la fiche
-              </LinkButton>
-            )}
-          </div>
-
-          {/* Stats en grille à filets */}
-          <div className="hairline-grid grid-cols-3 mt-12 md:mt-14">
-            <StatCard href="/wiki" label="Personnages" value={npcCount ?? 0} />
-            <StatCard href="/journal" label="Jours passés" value={latestDay} />
-            <StatCard href="/enquetes" label="Enquêtes" value={invCount ?? 0} />
-          </div>
-        </div>
-
-        {/* Cliché encadré */}
-        <div>
-          <div className="border border-border p-3.5 bg-surface-2">
-            {c?.photo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={c.photo_url}
-                alt={c.name}
-                className="w-full aspect-[4/5] object-cover"
-              />
-            ) : (
-              <div className="w-full aspect-[4/5] bg-background flex items-center justify-center meta-label">
-                photo · eitan carrington
+          <div className="hand mt-5 text-ink">
+            <div className="text-[58px] sm:text-[78px] leading-[0.9] font-semibold">
+              {first}
+            </div>
+            {rest.length > 0 && (
+              <div className="text-[42px] sm:text-[58px] leading-none font-medium ml-1.5">
+                {rest.join(" ")}
               </div>
             )}
-            <div className="flex justify-between items-center pt-3.5 px-1 meta-label">
-              <span>Cliché n° 004</span>
-              {c?.twitch_username && (
+          </div>
+          <p className="hand mt-3.5 text-[21px] sm:text-[24px] leading-[1.38] max-w-[23ch]">
+            {age} ans. Je note tout ici parce que je finis toujours par oublier
+            qui me devait quoi.
+          </p>
+
+          <div className="mt-9 flex gap-6 sm:gap-10 items-start">
+            <div className="w-[132px] sm:w-[212px] shrink-0" style={{ transform: "rotate(-1.8deg)" }}>
+              <Photo
+                src={c?.photo_url}
+                alt={name}
+                className="aspect-[212/252] w-full"
+                corner={26}
+                fourCorners
+                live={isLive}
+                initial="E"
+              />
+              <p className="typed mt-2">Cliché n° 004</p>
+            </div>
+
+            <div className="hand text-ink pt-1">
+              <Counter href="/wiki" value={npcCount ?? 0} label="personnes que je croise" />
+              <Counter href="/journal" value={latestDay} label="jours notés" />
+              <Counter
+                href="/enquetes"
+                value={openInvCount ?? 0}
+                label="enquêtes en cours"
+                red
+              />
+            </div>
+          </div>
+
+          <PageNumber>1</PageNumber>
+        </div>
+      }
+      right={
+        <div className="relative">
+          {canEdit && (
+            <div className="mb-4 text-right">
+              <Link
+                href="/admin/character"
+                className="hand text-[20px] text-ink-soft underline decoration-2 underline-offset-4 hover:text-ink"
+              >
+                corriger ma fiche
+              </Link>
+            </div>
+          )}
+
+          {isLive && c?.twitch_username ? (
+            <div className="relative lg:flex lg:items-start lg:gap-5">
+              <p
+                className="hand hidden lg:block text-[19px] leading-[25px] text-ink-soft w-[150px] shrink-0 mt-10"
+                style={{ transform: "rotate(-1.6deg)" }}
+              >
+                le stream s&apos;ouvre ici, dans la page →
+              </p>
+              <TwitchEmbed channel={c.twitch_username} className="lg:ml-auto lg:w-[340px]" />
+            </div>
+          ) : (
+            c?.twitch_username && (
+              <p
+                className="hand text-[20px] leading-snug text-ink-soft max-w-[30ch]"
+                style={{ transform: "rotate(-1.2deg)" }}
+              >
+                pas en ligne ce soir.{" "}
                 <a
                   href={`https://www.twitch.tv/${c.twitch_username}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={
-                    "inline-flex items-center gap-1.5 tracking-[0.22em] transition-colors " +
-                    (isLive
-                      ? "text-accent"
-                      : "text-muted hover:text-accent")
-                  }
-                  title={
-                    isLive
-                      ? `${c.twitch_username} est en live !`
-                      : `Voir la chaîne de ${c.twitch_username}`
-                  }
+                  className="underline decoration-2 underline-offset-4 hover:text-ink"
                 >
-                  <TwitchLiveDot isLive={isLive} size={7} />
-                  {isLive ? "en direct" : c.twitch_username}
+                  sa chaîne, {c.twitch_username}
                 </a>
-              )}
+              </p>
+            )
+          )}
+
+          <p
+            className="hand text-pen-red text-[20px] leading-[26px] max-w-[16ch] mt-7 lg:mt-8"
+            style={{ transform: "rotate(-2.4deg)" }}
+          >
+            relire ça un jour, c&apos;est trop propre
+          </p>
+
+          <Sheet
+            className="mt-3 lg:mr-10 !pt-8"
+            rotate="-0.7deg"
+            label="Ce que je veux bien en dire"
+          >
+            {bioParas.map((p, i) => (
+              <p
+                key={i}
+                className="print text-[16.5px] leading-[1.78] max-w-[48ch] mb-3 last:mb-0 whitespace-pre-line"
+              >
+                {p}
+              </p>
+            ))}
+          </Sheet>
+
+          <div className="hand mt-10">
+            <div className="text-[26px] font-semibold hand-under inline-block">
+              la famille
+            </div>
+            <div className="mt-3 flex flex-col sm:flex-row items-start gap-5 sm:gap-7">
+              <div className="text-[22px] leading-[30px] max-w-[30ch]">
+                {familyLines.map((l, i) => (
+                  <div key={i}>{l}</div>
+                ))}
+              </div>
+              <div className="typed leading-[1.9] sm:border-l sm:border-[color:var(--sheet-rule)] sm:pl-4 shrink-0">
+                voir aussi
+                <br />·{" "}
+                <Link href="/wiki/eitan" className="hover:text-ink">
+                  ma fiche
+                </Link>
+                <br />·{" "}
+                <Link href="/mindmap" className="hover:text-ink">
+                  comment tout se tient
+                </Link>
+              </div>
             </div>
           </div>
 
-          {/* Traits */}
-          {c?.traits && c.traits.length > 0 && (
-            <div className="mt-9 border-t border-border pt-5">
-              <p className="meta-label mb-4">Traits</p>
-              <div className="flex flex-wrap gap-2">
-                {c.traits.map((t, i) => (
-                  <span
-                    key={i}
-                    className="border border-border px-3 py-1.5 text-xs text-muted"
-                  >
-                    {t}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          <PageNumber align="right">2</PageNumber>
         </div>
-      </section>
-
-      {/* Twitch live embed */}
-      {isLive && c?.twitch_username && (
-        <section>
-          <TwitchEmbed channel={c.twitch_username} />
-        </section>
-      )}
-
-      {/* Bio + Famille */}
-      <section className="border-t border-border pt-11 md:pt-14 grid md:grid-cols-2 gap-px bg-border border-x border-b border-border">
-        <div className="bg-background p-6 md:p-8">
-          <p className="meta-label mb-4">Qui je suis</p>
-          <h2 className="font-display font-light text-[28px] md:text-3xl mb-5 md:mb-6">Biographie</h2>
-          <p className="text-muted leading-[1.85] whitespace-pre-line max-w-[52ch]">
-            {c?.bio ??
-              "Dernier né de la famille Carrington. Vit à Richman Lane mais ne se reconnait pas dans les délires de sa famille et des autres bourgeois du quartier."}
-          </p>
-        </div>
-        <div className="bg-background p-6 md:p-8">
-          <p className="meta-label mb-4">D&apos;où je viens</p>
-          <h2 className="font-display font-light text-[28px] md:text-3xl mb-5 md:mb-6">
-            Famille &amp; origines
-          </h2>
-          <p className="text-muted leading-[1.85] whitespace-pre-line max-w-[52ch]">
-            {c?.background ??
-              "Famille juive aisée. Mère : Blair Carrington. Frère : Elias Carrington."}
-          </p>
-        </div>
-      </section>
-    </div>
+      }
+    />
   );
 }
 
-function StatCard({
+function Counter({
   href,
-  label,
   value,
+  label,
+  red = false,
 }: {
   href: string;
-  label: string;
   value: number;
+  label: string;
+  red?: boolean;
 }) {
   return (
-    <Link href={href} className="block px-3.5 py-4 md:px-5 md:py-6 group">
-      <div className="font-display font-light text-[30px] md:text-4xl text-accent leading-none">
+    <Link href={href} className="block mb-4 sm:mb-5 group">
+      <span
+        className={
+          "text-[34px] sm:text-[46px] font-semibold leading-none border-b-2 " +
+          (red ? "text-pen-red border-pen-red" : "border-ink")
+        }
+      >
         {value}
-      </div>
-      <div className="meta-label mt-2.5 group-hover:text-foreground transition-colors">
+      </span>
+      <span className="block text-[17px] sm:text-[21px] text-ink-soft mt-0.5 leading-tight group-hover:text-ink">
         {label}
-      </div>
+      </span>
     </Link>
   );
 }

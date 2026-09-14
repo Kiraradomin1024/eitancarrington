@@ -109,14 +109,14 @@ export function NpcForm({
         </div>
         {existingNpcs && existingNpcs.length > 0 && (
           <div className="md:col-span-2">
-            <span className="text-sm text-muted mb-1.5 block">
+            <span className="typed mb-1 block">
               Relations avec les autres persos
             </span>
-            <p className="text-xs text-muted italic mb-3">
+            <p className="hand text-[18px] text-ink-faint mb-3">
               Par défaut : aucune relation. Change le menu déroulant pour
               définir un lien.
             </p>
-            <div className="grid sm:grid-cols-2 gap-2 max-h-96 overflow-y-auto pr-1 border border-border rounded p-3 bg-surface-2/40">
+            <div className="grid sm:grid-cols-2 gap-2 max-h-96 overflow-y-auto pr-1 border border-[color:var(--sheet-rule)] p-3">
               {existingNpcs.map((n) => (
                 <div key={n.id} className="flex items-center gap-2">
                   <span
@@ -149,7 +149,7 @@ export function NpcForm({
           </div>
         )}
         {error && (
-          <p className="md:col-span-2 text-danger text-xs">{error}</p>
+          <p className="md:col-span-2 hand text-pen-red text-[18px]">{error}</p>
         )}
         <div className="md:col-span-2 flex justify-end">
           <Button type="submit" disabled={pending}>

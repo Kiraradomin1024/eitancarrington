@@ -41,7 +41,7 @@ export default async function EditDayPage({
 
   return (
     <div>
-      <PageTitle title={`Modifier — ${d.title}`} />
+      <PageTitle title="reprendre le récit" subtitle={d.title} />
       <DayForm
         initial={d}
         initialNpcIds={(links ?? []).map((l: { npc_id: string }) => l.npc_id)}

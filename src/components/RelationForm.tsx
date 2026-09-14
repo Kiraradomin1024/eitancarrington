@@ -85,7 +85,7 @@ export function RelationForm({
           </Field>
         </div>
         {error && (
-          <p className="md:col-span-2 text-danger text-xs">{error}</p>
+          <p className="md:col-span-2 hand text-pen-red text-[18px]">{error}</p>
         )}
         <div className="md:col-span-2 flex justify-end">
           <Button type="submit" disabled={pending}>

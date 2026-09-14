@@ -27,7 +27,7 @@ export default async function EditInvPage({
   const update = updateInvestigation.bind(null, inv.id);
   return (
     <div>
-      <PageTitle title={`Modifier — ${inv.title}`} />
+      <PageTitle title="reprendre le dossier" subtitle={inv.title} />
       <InvestigationForm initial={inv} action={update} />
     </div>
   );

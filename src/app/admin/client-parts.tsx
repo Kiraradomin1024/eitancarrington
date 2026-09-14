@@ -19,16 +19,16 @@ export function ProfileRow({
 }) {
   const [pending, startTransition] = useTransition();
   return (
-    <Card className="!p-4">
+    <div className="py-2 border-b border-[color:var(--border)]">
       <div className="flex items-center gap-3 flex-wrap">
         <div className="flex-1 min-w-0">
-          <div className="text-foreground">
+          <div className="hand text-[23px] leading-tight text-ink">
             {profile.display_name ?? profile.email}
           </div>
-          <div className="text-xs text-muted">{profile.email}</div>
+          <div className="typed normal-case tracking-[0.04em]">{profile.email}</div>
         </div>
         <Badge tone={TONE[profile.role]}>{profile.role}</Badge>
-        <div className="flex gap-1">
+        <div className="flex gap-4 items-center flex-wrap">
           {profile.role !== "contributor" && (
             <Button
               variant="ghost"
@@ -39,7 +39,7 @@ export function ProfileRow({
                 )
               }
             >
-              → Contributeur
+              faire écrire
             </Button>
           )}
           {profile.role !== "admin" && (
@@ -50,7 +50,7 @@ export function ProfileRow({
                 startTransition(() => setRoleAction(profile.id, "admin"))
               }
             >
-              → Admin
+              passer admin
             </Button>
           )}
           {profile.role !== "pending" && (
@@ -61,12 +61,12 @@ export function ProfileRow({
                 startTransition(() => setRoleAction(profile.id, "pending"))
               }
             >
-              Retirer
+              Retirer la plume
             </Button>
           )}
         </div>
       </div>
-    </Card>
+    </div>
   );
 }
 
@@ -106,7 +106,7 @@ export function BackupButton({
       <Button onClick={handleClick} disabled={busy}>
         {busy ? "Export en cours…" : "Télécharger un backup JSON"}
       </Button>
-      {msg && <span className="text-xs text-muted">{msg}</span>}
+      {msg && <span className="hand text-[19px] text-ink-soft">{msg}</span>}
     </div>
   );
 }

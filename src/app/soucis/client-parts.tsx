@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, Card, Field } from "@/components/ui";
+import { Button, Field } from "@/components/ui";
+import { Sheet } from "@/components/paper";
 import type { Issue } from "@/lib/types";
 import {
   ISSUE_SEVERITY_LABELS,
@@ -16,7 +17,7 @@ export function IssueForm({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   return (
-    <Card>
+    <Sheet className="!pt-8" rotate="-0.4deg">
       <form
         action={async (fd) => {
           setPending(true);
@@ -33,9 +34,9 @@ export function IssueForm({
           }
         }}
         id="issue-form"
-        className="grid md:grid-cols-3 gap-4"
+        className="grid sm:grid-cols-2 gap-4"
       >
-        <div className="md:col-span-3">
+        <div className="sm:col-span-2">
           <Field label="Titre *">
             <input name="title" required />
           </Field>
@@ -58,21 +59,21 @@ export function IssueForm({
             ))}
           </select>
         </Field>
-        <div className="md:col-span-3">
+        <div className="sm:col-span-2">
           <Field label="Description">
             <textarea name="description" rows={3} />
           </Field>
         </div>
         {error && (
-          <p className="md:col-span-3 text-danger text-xs">{error}</p>
+          <p className="sm:col-span-2 hand text-pen-red text-[18px]">{error}</p>
         )}
-        <div className="md:col-span-3 flex justify-end">
+        <div className="sm:col-span-2 flex justify-end">
           <Button type="submit" disabled={pending}>
-            {pending ? "..." : "Ajouter"}
+            {pending ? "..." : "Noter"}
           </Button>
         </div>
       </form>
-    </Card>
+    </Sheet>
   );
 }
 
@@ -90,42 +91,42 @@ export function IssueRowActions({
   onEdit: () => void;
 }) {
   const [pending, startTransition] = useTransition();
+  const link = "hand text-[18px] leading-none underline underline-offset-4 disabled:opacity-50";
   return (
-    <div className="flex gap-2 items-start">
-      <Button variant="ghost" disabled={pending} onClick={onEdit}>
-        ✏️
-      </Button>
+    <div className="flex gap-4 items-baseline flex-wrap">
+      <button type="button" className={link + " text-ink-soft hover:text-ink"} disabled={pending} onClick={onEdit}>
+        corriger
+      </button>
       {status !== "resolved" ? (
-        <Button
-          variant="ghost"
+        <button
+          type="button"
+          className={link + " text-pen-green"}
           disabled={pending}
-          onClick={() =>
-            startTransition(() => onUpdateStatus(id, "resolved"))
-          }
+          onClick={() => startTransition(() => onUpdateStatus(id, "resolved"))}
         >
-          ✓ Résolu
-        </Button>
+          réglé
+        </button>
       ) : (
-        <Button
-          variant="ghost"
+        <button
+          type="button"
+          className={link + " text-ink-soft hover:text-ink"}
           disabled={pending}
-          onClick={() =>
-            startTransition(() => onUpdateStatus(id, "active"))
-          }
+          onClick={() => startTransition(() => onUpdateStatus(id, "active"))}
         >
-          Réactiver
-        </Button>
+          ça revient
+        </button>
       )}
-      <Button
-        variant="danger"
+      <button
+        type="button"
+        className={link + " text-pen-red/80 hover:text-pen-red"}
         disabled={pending}
         onClick={() => {
           if (!window.confirm("Supprimer ce souci ?")) return;
           startTransition(() => onDelete(id));
         }}
       >
-        ×
-      </Button>
+        rayer
+      </button>
     </div>
   );
 }
@@ -149,7 +150,7 @@ export function EditableIssueCard({
 
   if (editing) {
     return (
-      <Card className="!p-5 border-accent/40">
+      <Sheet className="!pt-8" rotate="0.3deg">
         <form
           action={async (fd) => {
             setPending(true);
@@ -163,9 +164,9 @@ export function EditableIssueCard({
               setPending(false);
             }
           }}
-          className="grid md:grid-cols-3 gap-4"
+          className="grid sm:grid-cols-2 gap-4"
         >
-          <div className="md:col-span-3">
+          <div className="sm:col-span-2">
             <Field label="Titre *">
               <input name="title" required defaultValue={issue.title} />
             </Field>
@@ -188,7 +189,7 @@ export function EditableIssueCard({
               ))}
             </select>
           </Field>
-          <div className="md:col-span-3">
+          <div className="sm:col-span-2">
             <Field label="Description">
               <textarea
                 name="description"
@@ -198,9 +199,9 @@ export function EditableIssueCard({
             </Field>
           </div>
           {error && (
-            <p className="md:col-span-3 text-danger text-xs">{error}</p>
+            <p className="sm:col-span-2 hand text-pen-red text-[18px]">{error}</p>
           )}
-          <div className="md:col-span-3 flex justify-end gap-2">
+          <div className="sm:col-span-2 flex justify-end gap-2">
             <Button
               type="button"
               variant="ghost"
@@ -213,59 +214,66 @@ export function EditableIssueCard({
             </Button>
           </div>
         </form>
-      </Card>
+      </Sheet>
     );
   }
 
+  const sev = SEVERITY_INK[issue.severity];
+  const resolved = issue.status === "resolved";
+  const paused = issue.status === "paused";
+
   return (
-    <Card className="!p-5">
-      <div className="flex items-start gap-3 flex-wrap">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-serif text-xl text-foreground">
-              {issue.title}
-            </h3>
-            <span
-              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                issue.severity === "critical"
-                  ? "bg-red-500/10 text-red-400"
-                  : issue.severity === "high"
-                    ? "bg-orange-500/10 text-orange-400"
-                    : issue.severity === "medium"
-                      ? "bg-accent-soft text-accent"
-                      : "bg-surface-2 text-muted"
-              }`}
-            >
-              {ISSUE_SEVERITY_LABELS[issue.severity]}
+    <div id={"souci-" + issue.id} className="flex items-start gap-4 py-3 scroll-mt-24">
+      {/* case à cocher tracée à la main */}
+      <span
+        aria-hidden
+        className="mt-2 shrink-0 w-[22px] h-[22px] flex items-center justify-center hand text-[26px] leading-none text-pen-green"
+        style={{ border: "2px solid var(--ink)", borderRadius: "3px 5px 4px 6px", transform: "rotate(-3deg)" }}
+      >
+        {resolved ? "✓" : ""}
+      </span>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline gap-x-3 gap-y-1 flex-wrap">
+          <h3
+            className={
+              "hand text-[25px] md:text-[27px] font-semibold leading-[1.1] " +
+              (resolved ? "line-through decoration-2 text-ink-faint" : "text-ink")
+            }
+          >
+            {issue.title}
+          </h3>
+          {!resolved && (
+            <span className="hand text-[21px] leading-none" style={{ color: sev.tone }} title={ISSUE_SEVERITY_LABELS[issue.severity]}>
+              {sev.mark}
             </span>
-            <span
-              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                issue.status === "active"
-                  ? "bg-orange-500/10 text-orange-400"
-                  : issue.status === "resolved"
-                    ? "bg-green-500/10 text-green-400"
-                    : "bg-surface-2 text-muted"
-              }`}
-            >
-              {ISSUE_STATUS_LABELS[issue.status]}
-            </span>
-          </div>
-          {issue.description && (
-            <p className="text-foreground/80 text-sm mt-2 whitespace-pre-line">
-              {issue.description}
-            </p>
           )}
+          {paused && <span className="hand text-[19px] text-ink-faint">en pause</span>}
         </div>
+        {issue.description && (
+          <p className="print text-[15px] leading-[1.65] text-ink-soft mt-1 whitespace-pre-line max-w-[70ch]">
+            {issue.description}
+          </p>
+        )}
         {canEdit && (
-          <IssueRowActions
-            id={issue.id}
-            status={issue.status}
-            onUpdateStatus={onUpdateStatus}
-            onDelete={onDelete}
-            onEdit={() => setEditing(true)}
-          />
+          <div className="mt-2">
+            <IssueRowActions
+              id={issue.id}
+              status={issue.status}
+              onUpdateStatus={onUpdateStatus}
+              onDelete={onDelete}
+              onEdit={() => setEditing(true)}
+            />
+          </div>
         )}
       </div>
-    </Card>
+    </div>
   );
 }
+
+/* La gravité, comme on la note : un mot, des points d'exclamation */
+const SEVERITY_INK: Record<Issue["severity"], { mark: string; tone: string }> = {
+  low: { mark: "· pas grave", tone: "var(--pen-grey)" },
+  medium: { mark: "! à surveiller", tone: "var(--pen-amber)" },
+  high: { mark: "!! sérieux", tone: "var(--pen-red)" },
+  critical: { mark: "!!! urgent", tone: "var(--pen-red)" },
+};

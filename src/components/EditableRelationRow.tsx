@@ -3,6 +3,7 @@
 import { Button, Card, Field } from "@/components/ui";
 import type { Npc, Relation } from "@/lib/types";
 import { RELATION_LABELS } from "@/lib/types";
+import { RELATION_INK } from "@/lib/ink";
 import { useState } from "react";
 
 export function EditableRelationRow({
@@ -28,50 +29,43 @@ export function EditableRelationRow({
 
   if (!editing) {
     return (
-      <Card className="!p-4">
-        <div className="flex items-center gap-3 flex-wrap">
-          <NameDisplay id={relation.source_npc_id} name={sourceName} />
-          <span className="text-muted">→</span>
-          <NameDisplay id={relation.target_npc_id} name={targetName} />
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-accent-soft text-accent">
-            {RELATION_LABELS[relation.type]}
-          </span>
-          {relation.intensity !== 0 && (
-            <span
-              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${relation.intensity > 0 ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}
+      <div className="flex items-baseline gap-x-3 gap-y-1 flex-wrap hand text-[22px] leading-[34px] py-0.5">
+        <NameDisplay id={relation.source_npc_id} name={sourceName} />
+        <span className="text-ink-faint">—</span>
+        <NameDisplay id={relation.target_npc_id} name={targetName} />
+        <span
+          style={{
+            textDecorationLine: "underline",
+            textDecorationStyle: RELATION_INK[relation.type].decoration,
+            textDecorationColor: RELATION_INK[relation.type].color,
+            textDecorationThickness: "2px",
+            textUnderlineOffset: "5px",
+          }}
+        >
+          {RELATION_INK[relation.type].word}
+        </span>
+        {relation.description && (
+          <span className="text-ink-soft text-[20px]">, {relation.description}</span>
+        )}
+        {canEdit && (
+          <span className="ml-auto flex gap-4 text-[18px]">
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="text-ink-soft underline underline-offset-4 hover:text-ink"
             >
-              {relation.intensity > 0 ? "+" : ""}
-              {relation.intensity}
-            </span>
-          )}
-          {relation.description && (
-            <span className="text-muted text-sm italic">
-              — {relation.description}
-            </span>
-          )}
-          {canEdit && (
-            <div className="ml-auto flex gap-2">
-              <button
-                type="button"
-                onClick={() => setEditing(true)}
-                className="text-muted hover:text-accent transition-colors text-sm"
-                title="Modifier"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                  <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
-                </svg>
-              </button>
-              <DeleteBtn action={deleteAction} />
-            </div>
-          )}
-        </div>
-      </Card>
+              corriger
+            </button>
+            <DeleteBtn action={deleteAction} />
+          </span>
+        )}
+      </div>
     );
   }
 
   // Editing mode
   return (
-    <Card className="!p-4 border-accent/40">
+    <Card className="!p-5 card-glow !pt-9">
       <form
         action={async (fd) => {
           setPending(true);
@@ -145,7 +139,7 @@ export function EditableRelationRow({
           </Field>
         </div>
         {error && (
-          <p className="md:col-span-2 text-danger text-xs">{error}</p>
+          <p className="md:col-span-2 hand text-pen-red text-[18px]">{error}</p>
         )}
         <div className="md:col-span-2 flex justify-end gap-2">
           <Button
@@ -153,7 +147,7 @@ export function EditableRelationRow({
             variant="ghost"
             onClick={() => setEditing(false)}
           >
-            Annuler
+            laisser tomber
           </Button>
           <Button type="submit" disabled={pending}>
             {pending ? "..." : "Enregistrer"}
@@ -166,7 +160,7 @@ export function EditableRelationRow({
 
 function NameDisplay({ id, name }: { id: string | null; name: string }) {
   return (
-    <span className="text-foreground font-medium">{name}</span>
+    <span className="text-ink font-semibold">{name}</span>
   );
 }
 
@@ -181,10 +175,10 @@ function DeleteBtn({ action }: { action: () => Promise<void> }) {
         setPending(true);
         await action();
       }}
-      className="text-muted hover:text-danger transition-colors text-sm"
+      className="text-pen-red/80 hover:text-pen-red underline underline-offset-4"
       title="Supprimer"
     >
-      ×
+      rayer
     </button>
   );
 }

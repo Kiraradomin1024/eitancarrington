@@ -203,12 +203,13 @@ export const MAP_CATEGORY_LABELS: Record<MapCategory, string> = {
   other: "Autre",
 };
 
+/* Encres du cahier : le crayon qui entoure le lieu sur la carte */
 export const MAP_CATEGORY_COLORS: Record<MapCategory, string> = {
-  home: "#3b82f6",
-  work: "#10b981",
-  important: "#f59e0b",
-  danger: "#ef4444",
-  other: "#a855f7",
+  home: "#22314a",
+  work: "#4a6b3f",
+  important: "#6d4a7f",
+  danger: "#a03a3a",
+  other: "#8a6a2c",
 };
 
 export type QuizOption = "a" | "b" | "c" | "d";

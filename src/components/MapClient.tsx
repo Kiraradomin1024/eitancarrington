@@ -109,6 +109,23 @@ function categoryIconSvg(category: MapCategory, size = 14, color = "white"): str
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${CATEGORY_ICON_PATHS[category]}</svg>`;
 }
 
+/* La légende, écrite à la main */
+const CATEGORY_HAND: Record<MapCategory, string> = {
+  home: "chez quelqu'un",
+  work: "là où on bosse",
+  important: "à retenir",
+  danger: "danger",
+  other: "le reste",
+};
+
+/* Cercle tracé au crayon : jamais tout à fait rond */
+function wobbleRadius(key: string): string {
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0;
+  const v = (n: number) => 46 + (Math.abs(h >> n) % 9);
+  return `${v(0)}% ${100 - v(0)}% ${v(3)}% ${100 - v(3)}% / ${v(6)}% ${v(9)}% ${100 - v(9)}% ${100 - v(6)}%`;
+}
+
 type LeafletNS = typeof import("leaflet");
 type LeafletMap = import("leaflet").Map;
 type LeafletMarker = import("leaflet").Marker;
@@ -316,11 +333,12 @@ export function MapClient({
 
     for (const m of filteredMarkers) {
       const color = m.color || MAP_CATEGORY_COLORS[m.category];
+      const wobble = wobbleRadius(m.id);
       const icon = L.divIcon({
         className: "ls-marker",
-        html: `<span class="ls-marker-pin" style="--c:${color}">${categoryIconSvg(m.category, 16)}</span>`,
-        iconSize: [30, 30],
-        iconAnchor: [15, 15],
+        html: `<span class="ls-marker-ring" style="--c:${color};border-radius:${wobble}">${categoryIconSvg(m.category, 14, color)}</span><span class="ls-marker-label" style="color:${color}">${escapeHtml(m.label)}</span>`,
+        iconSize: [34, 30],
+        iconAnchor: [17, 15],
       });
       const marker = L.marker(game._gameToLatLng(m.x, m.y), {
         icon,
@@ -337,18 +355,18 @@ export function MapClient({
         .filter((v): v is string => Boolean(v));
       const peopleHtml = peopleNames.length
         ? `<div class="ls-popup-people">${peopleNames
-            .map((n) => `<span class="ls-popup-chip">${escapeHtml(n)}</span>`)
-            .join("")}</div>`
+            .map((n) => escapeHtml(n))
+            .join(" · ")}</div>`
         : "";
       marker.bindPopup(
         `<div class="ls-popup">
+          <div class="ls-popup-cat" style="color:${color}">${MAP_CATEGORY_LABELS[m.category]}</div>
           <div class="ls-popup-title">${escapeHtml(m.label)}</div>
-          <div class="ls-popup-cat" style="color:${color}">${categoryIconSvg(m.category, 12, color)}<span>${MAP_CATEGORY_LABELS[m.category]}</span></div>
           ${m.description ? `<div class="ls-popup-desc">${escapeHtml(m.description).replace(/\n/g, "<br/>")}</div>` : ""}
           ${peopleHtml}
           ${canEdit ? `<div class="ls-popup-actions">
-            <button data-action="edit" data-id="${m.id}">Modifier</button>
-            <button data-action="delete" data-id="${m.id}">Supprimer</button>
+            <button data-action="edit" data-id="${m.id}">corriger</button>
+            <button data-action="delete" data-id="${m.id}">rayer</button>
           </div>` : ""}
         </div>`
       );
@@ -398,6 +416,19 @@ export function MapClient({
     []
   );
 
+  // Arrivée depuis la recherche globale : /map?lieu=<id>
+  const openedFromUrl = useRef(false);
+  useEffect(() => {
+    if (openedFromUrl.current || !mapRef.current || mapVersion === 0) return;
+    const id = new URLSearchParams(window.location.search).get("lieu");
+    if (!id) return;
+    const m = markers.find((x) => x.id === id);
+    if (!m) return;
+    openedFromUrl.current = true;
+    const t = setTimeout(() => focusMarker(m), 250);
+    return () => clearTimeout(t);
+  }, [mapVersion, markers, focusMarker]);
+
   function toggleCategory(c: MapCategory) {
     setHidden((prev) => {
       const next = new Set(prev);
@@ -408,104 +439,80 @@ export function MapClient({
   }
 
   return (
-    <div className="grid lg:grid-cols-[1fr_320px] gap-4">
-      <div className="relative">
-        {canEdit && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1100] flex gap-2 flex-wrap justify-center">
+    <div data-no-lightbox="">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+        <div>
+          <h1 className="hand text-[34px] md:text-[38px] font-semibold leading-none">
+            Los Santos, ce que j&apos;en connais
+          </h1>
+          <p className="hand text-[20px] md:text-[21px] text-ink-soft mt-1">
+            la carte pliée, annotée à la main
+          </p>
+        </div>
+        <div className="flex items-baseline gap-4 flex-wrap">
+          <span className="typed">fond de carte</span>
+          {(Object.keys(STYLES) as TileStyle[]).map((st) => (
             <button
+              key={st}
               type="button"
-              onClick={() => setAdding((v) => !v)}
-              className={
-                "px-5 py-2.5 text-[11px] uppercase tracking-[0.2em] shadow-lg transition-colors border " +
-                (adding
-                  ? "bg-accent text-background border-accent"
-                  : "bg-background text-muted border-border hover:text-accent hover:border-accent/60")
-              }
+              onClick={() => setStyle(st)}
+              className="hand-toggle !text-[20px]"
+              data-active={style === st}
             >
-              {adding ? "✕ Annuler" : "+ Ajouter un lieu"}
-            </button>
-            {adding && (
-              <span className="px-3 py-2.5 bg-background text-[11px] uppercase tracking-[0.16em] text-muted border border-border shadow-lg">
-                Clique sur la carte pour placer le marqueur
-              </span>
-            )}
-          </div>
-        )}
-
-        <div className="absolute top-3 right-3 z-[1100] flex gap-px bg-border border border-border shadow-md">
-          {(Object.keys(STYLES) as TileStyle[]).map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setStyle(s)}
-              className={
-                "px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] transition-colors bg-background " +
-                (style === s
-                  ? "text-accent"
-                  : "text-muted hover:text-foreground")
-              }
-            >
-              {STYLES[s].label}
+              {STYLES[st].label.toLowerCase()}
             </button>
           ))}
         </div>
-
-        <div
-          ref={containerRef}
-          className="w-full h-[380px] md:h-[78vh] border border-border overflow-hidden"
-          style={{
-            background:
-              "linear-gradient(180deg, var(--surface) 0%, var(--background) 100%)",
-          }}
-          data-no-lightbox=""
-        />
       </div>
 
-      {/* Sidebar */}
-      <aside className="space-y-3">
-        <div className="card !p-3">
-          <div className="text-xs uppercase tracking-wider text-muted mb-2 font-medium">
-            Catégories
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {CATEGORIES.map((c) => {
-              const off = hidden.has(c);
-              return (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => toggleCategory(c)}
-                  className={
-                    "inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] uppercase tracking-[0.14em] border transition-colors " +
-                    (off
-                      ? "border-border text-muted opacity-50"
-                      : "border-border text-foreground hover:bg-accent-soft")
-                  }
-                >
-                  <span
-                    className="inline-flex items-center justify-center w-4 h-4 rounded-full"
-                    style={{ background: MAP_CATEGORY_COLORS[c] }}
-                    dangerouslySetInnerHTML={{
-                      __html: categoryIconSvg(c, 10, "white"),
-                    }}
-                  />
-                  {MAP_CATEGORY_LABELS[c]}
-                </button>
-              );
-            })}
-          </div>
+      <div className="map-sheet grid lg:grid-cols-[1fr_270px]">
+        <div className="relative min-w-0">
+          {/* Pas de backdrop-filter au-dessus de Leaflet : les plis sont de simples dégradés */}
+          <div className="map-fold map-fold--v1" aria-hidden />
+          <div className="map-fold map-fold--v2" aria-hidden />
+          <div className="map-fold map-fold--h" aria-hidden />
+
+          {canEdit && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1100] flex gap-3 flex-wrap justify-center items-center">
+              <button
+                type="button"
+                onClick={() => setAdding((v) => !v)}
+                className={
+                  "stamp stamp--sm " +
+                  (adding ? "text-pen-red" : "text-ink")
+                }
+                style={{ background: "var(--sheet)", opacity: 1, mixBlendMode: "normal" }}
+              >
+                {adding ? "laisser tomber" : "noter un endroit"}
+              </button>
+              {adding && (
+                <span className="hand text-[19px] px-2.5 py-0.5 text-ink" style={{ background: "var(--sheet)" }}>
+                  clique sur la carte pour le placer
+                </span>
+              )}
+            </div>
+          )}
+
+          <div
+            ref={containerRef}
+            className="w-full h-[440px] md:h-[76vh]"
+            style={{ background: "var(--paper)" }}
+            data-no-lightbox=""
+          />
         </div>
 
-        <div className="card !p-3">
-          <div className="text-xs uppercase tracking-wider text-muted mb-2 font-medium flex items-center justify-between">
-            <span>Lieux ({filteredMarkers.length})</span>
+        {/* Le volet des lieux, rabattu sur la droite */}
+        <aside className="map-flap px-5 py-6">
+          <div className="hand text-[27px] font-semibold leading-none">
+            les endroits notés
           </div>
+          <div className="sheet__rule mt-3" />
           {filteredMarkers.length === 0 ? (
-            <p className="text-sm text-muted italic">
-              Aucun marqueur pour l&apos;instant.
+            <p className="hand text-[20px] text-ink-faint">
+              aucun endroit noté pour l&apos;instant.
             </p>
           ) : (
-            <ul className="space-y-1 max-h-[60vh] overflow-y-auto -mx-1 px-1">
+            <ul className="max-h-[36vh] lg:max-h-[42vh] overflow-y-auto -mx-1 px-1">
               {filteredMarkers.map((m) => {
                 const color = m.color || MAP_CATEGORY_COLORS[m.category];
                 return (
@@ -514,31 +521,50 @@ export function MapClient({
                       type="button"
                       onClick={() => focusMarker(m)}
                       className={
-                        "w-full text-left px-2 py-1.5 rounded-lg text-sm flex items-center gap-2 transition-colors " +
-                        (focusId === m.id
-                          ? "bg-accent-soft text-accent"
-                          : "hover:bg-surface-2 text-foreground/85")
+                        "w-full text-left font-typed text-[12px] leading-[1.9] uppercase tracking-[0.04em] truncate " +
+                        (focusId === m.id ? "text-ink underline" : "text-typed-strong hover:text-ink")
                       }
+                      title={m.label}
                     >
-                      <span
-                        className="inline-flex items-center justify-center w-5 h-5 rounded-full shrink-0"
-                        style={{ background: color }}
-                        dangerouslySetInnerHTML={{
-                          __html: categoryIconSvg(m.category, 12, "white"),
-                        }}
-                      />
-                      <span className="truncate">{m.label}</span>
-                      <span className="ml-auto text-[10px] text-muted shrink-0">
-                        {MAP_CATEGORY_LABELS[m.category]}
-                      </span>
+                      {m.label} <span style={{ color }}>· {MAP_CATEGORY_LABELS[m.category]}</span>
                     </button>
                   </li>
                 );
               })}
             </ul>
           )}
-        </div>
-      </aside>
+          {canEdit && (
+            <p className="hand text-[19px] leading-[25px] text-ink-soft mt-4">
+              clic droit sur la carte pour en ajouter un
+            </p>
+          )}
+
+          <div className="mt-6">
+            <div className="typed">légende · touche pour masquer</div>
+            <ul className="mt-2.5 flex flex-col gap-1.5 hand text-[19px]">
+              {CATEGORIES.map((c) => {
+                const off = hidden.has(c);
+                return (
+                  <li key={c}>
+                    <button
+                      type="button"
+                      onClick={() => toggleCategory(c)}
+                      aria-pressed={!off}
+                      className={"flex items-center gap-2.5 " + (off ? "opacity-40 line-through" : "")}
+                    >
+                      <span
+                        className="w-4 h-4 shrink-0"
+                        style={{ border: `2px solid ${MAP_CATEGORY_COLORS[c]}`, borderRadius: "50%" }}
+                      />
+                      {CATEGORY_HAND[c]}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </aside>
+      </div>
 
       {/* Marker form modal */}
       {editing && (
@@ -551,121 +577,186 @@ export function MapClient({
         />
       )}
 
-      <style jsx global>{`
+<style jsx global>{`
         .ls-marker {
           background: transparent;
           border: none;
         }
-        .ls-marker-pin {
+        .ls-marker-ring {
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 30px;
+          width: 34px;
           height: 30px;
-          border-radius: 50%;
-          background: var(--c);
-          border: 2.5px solid white;
-          box-shadow:
-            0 0 0 1px rgba(0, 0, 0, 0.25),
-            0 4px 10px rgba(0, 0, 0, 0.35);
+          border: 2.5px solid var(--c);
+          background: color-mix(in srgb, var(--paper) 70%, transparent);
           cursor: pointer;
+          transform: rotate(-6deg);
           transition: transform 0.15s ease;
         }
-        .ls-marker-pin svg {
+        .ls-marker-ring svg {
           display: block;
-          filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
         }
-        .ls-marker:hover .ls-marker-pin {
-          transform: scale(1.15);
+        .ls-marker-label {
+          position: absolute;
+          left: 38px;
+          top: 2px;
+          white-space: nowrap;
+          font-family: var(--font-caveat), cursive;
+          font-size: 19px;
+          font-weight: 600;
+          line-height: 1;
+          padding: 1px 5px;
+          background: color-mix(in srgb, var(--paper) 80%, transparent);
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.15s ease;
+        }
+        .ls-marker:hover .ls-marker-ring {
+          transform: rotate(4deg) scale(1.12);
+        }
+        .ls-marker:hover .ls-marker-label {
+          opacity: 1;
         }
         .leaflet-container .leaflet-popup-content-wrapper {
-          background: var(--surface) !important;
-          color: var(--foreground) !important;
-          border-radius: 12px !important;
-          border: 1px solid var(--border);
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+          background: var(--sheet) !important;
+          color: var(--print) !important;
+          border-radius: 0 !important;
+          border: 0;
+          box-shadow: var(--shadow-sheet);
+          transform: rotate(-0.8deg);
         }
         .leaflet-container .leaflet-popup-tip {
-          background: var(--surface) !important;
-          border: 1px solid var(--border);
+          background: var(--sheet) !important;
+          box-shadow: none;
         }
         .leaflet-container .leaflet-popup-content {
-          color: var(--foreground) !important;
+          color: var(--print) !important;
+          margin: 14px 18px 14px 16px;
         }
         .leaflet-container .leaflet-popup-close-button {
-          color: var(--muted) !important;
+          color: var(--typed) !important;
         }
         .leaflet-container {
           background: transparent;
           font-family: inherit;
         }
-        .ls-popup-title {
-          font-weight: 700;
-          font-size: 15px;
-          color: var(--foreground);
-          margin-bottom: 2px;
+        .leaflet-container .leaflet-control-zoom a {
+          background: var(--sheet);
+          color: var(--ink);
+          border-color: var(--sheet-rule);
+          border-radius: 0 !important;
+        }
+        .leaflet-container .leaflet-control-attribution {
+          background: color-mix(in srgb, var(--sheet) 80%, transparent);
+          color: var(--typed);
+          font-family: var(--font-courier), monospace;
+          font-size: 10px;
+        }
+        .leaflet-container .leaflet-control-attribution a {
+          color: var(--ink-soft);
         }
         .ls-popup-cat {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
+          font-family: var(--font-courier), monospace;
           font-size: 10px;
           text-transform: uppercase;
-          letter-spacing: 0.06em;
+          letter-spacing: 0.14em;
+          margin-bottom: 2px;
+        }
+        .ls-popup-title {
+          font-family: var(--font-caveat), cursive;
+          font-weight: 600;
+          font-size: 24px;
+          line-height: 1.05;
+          color: var(--ink);
           margin-bottom: 6px;
         }
-        .ls-popup-cat svg {
-          flex-shrink: 0;
-        }
         .leaflet-container .leaflet-popup-content .ls-popup-desc {
-          font-size: 13px;
-          line-height: 1.5;
-          color: var(--foreground) !important;
+          font-family: var(--font-source-serif), Georgia, serif;
+          font-size: 14px;
+          line-height: 1.6;
+          color: var(--print) !important;
           opacity: 1 !important;
-          font-weight: 500;
-          margin-bottom: 10px;
+          margin-bottom: 8px;
           max-width: 240px;
           white-space: pre-wrap;
         }
         .ls-popup-people {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 4px;
-          margin-bottom: 8px;
+          font-family: var(--font-caveat), cursive;
+          font-size: 18px;
+          color: var(--ink-soft);
+          margin-bottom: 6px;
           max-width: 240px;
-        }
-        .ls-popup-chip {
-          display: inline-block;
-          padding: 2px 8px;
-          border-radius: 999px;
-          font-size: 11px;
-          background: var(--accent-soft);
-          color: var(--accent);
-          border: 1px solid rgba(124, 93, 250, 0.25);
         }
         .ls-popup-actions {
           display: flex;
-          gap: 6px;
-          margin-top: 8px;
+          gap: 14px;
+          margin-top: 6px;
         }
         .ls-popup-actions button {
-          font-size: 11px;
-          padding: 4px 10px;
-          border-radius: 999px;
-          border: 1px solid var(--border);
-          background: var(--surface-2);
-          color: var(--foreground);
+          font-family: var(--font-caveat), cursive;
+          font-size: 19px;
+          color: var(--ink-soft);
+          background: none;
+          border: 0;
+          padding: 0;
+          text-decoration: underline;
+          text-underline-offset: 3px;
           cursor: pointer;
-          transition: all 0.15s;
         }
         .ls-popup-actions button:hover {
-          background: var(--accent-soft);
-          color: var(--accent);
+          color: var(--ink);
         }
         .ls-popup-actions button[data-action="delete"]:hover {
-          background: rgba(239, 68, 68, 0.1);
-          color: rgb(239, 68, 68);
-          border-color: rgba(239, 68, 68, 0.3);
+          color: var(--pen-red);
+        }
+        .map-sheet {
+          position: relative;
+          background: var(--paper);
+          box-shadow: var(--shadow-sheet);
+        }
+        .map-fold {
+          position: absolute;
+          z-index: 450;
+          pointer-events: none;
+        }
+        .map-fold--v1,
+        .map-fold--v2 {
+          top: 0;
+          bottom: 0;
+          width: 14px;
+        }
+        .map-fold--v1 {
+          left: 33.3%;
+          background: linear-gradient(90deg, rgba(60, 48, 30, 0.16), rgba(255, 255, 255, 0.2));
+        }
+        .map-fold--v2 {
+          left: 66.6%;
+          background: linear-gradient(90deg, rgba(255, 255, 255, 0.2), rgba(60, 48, 30, 0.16));
+        }
+        .map-fold--h {
+          left: 0;
+          right: 0;
+          top: 50%;
+          height: 14px;
+          background: linear-gradient(180deg, rgba(60, 48, 30, 0.14), rgba(255, 255, 255, 0.18));
+        }
+        .map-flap {
+          position: relative;
+          z-index: 2;
+          background: var(--sheet);
+          box-shadow: -12px 0 22px rgba(50, 40, 25, 0.22);
+        }
+        @media (max-width: 1023px) {
+          .map-flap {
+            box-shadow: 0 -10px 20px rgba(50, 40, 25, 0.18);
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .ls-marker-ring,
+          .ls-marker-label {
+            transition: none;
+          }
         }
       `}</style>
     </div>
@@ -734,16 +825,18 @@ function MarkerForm({
 
   return (
     <div
-      className="fixed inset-0 z-[1200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[1200] flex items-center justify-center p-4"
+      style={{ background: "rgba(20, 16, 10, 0.55)" }}
       onClick={onClose}
     >
       <form
         onSubmit={onSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface border border-border rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4"
+        className="sheet sheet--stapled w-full max-w-md px-6 pt-9 pb-6 space-y-4 max-h-[90vh] overflow-y-auto"
+        style={{ transform: "rotate(-0.6deg)" }}
       >
-        <h2 className="font-display text-2xl text-foreground">
-          {isEdit ? "Modifier le lieu" : "Nouveau lieu"}
+        <h2 className="hand text-[30px] font-semibold leading-none text-ink">
+          {isEdit ? "corriger cet endroit" : "noter un endroit"}
         </h2>
 
         <input
@@ -758,7 +851,7 @@ function MarkerForm({
         />
 
         <div>
-          <span className="text-xs uppercase tracking-wider text-muted mb-1.5 block font-medium">
+          <span className="typed mb-1 block">
             Nom *
           </span>
           <input
@@ -771,7 +864,7 @@ function MarkerForm({
         </div>
 
         <div>
-          <span className="text-xs uppercase tracking-wider text-muted mb-1.5 block font-medium">
+          <span className="typed mb-1 block">
             Catégorie
           </span>
           <select name="category" defaultValue={m?.category ?? "other"}>
@@ -784,7 +877,7 @@ function MarkerForm({
         </div>
 
         <div>
-          <span className="text-xs uppercase tracking-wider text-muted mb-1.5 block font-medium">
+          <span className="typed mb-1 block">
             Description
           </span>
           <textarea
@@ -796,7 +889,7 @@ function MarkerForm({
         </div>
 
         <div>
-          <span className="text-xs uppercase tracking-wider text-muted mb-1.5 block font-medium">
+          <span className="typed mb-1 block">
             Personnes liées
           </span>
           {people.length > 0 && (
@@ -804,7 +897,7 @@ function MarkerForm({
               {people.map((p) => (
                 <span
                   key={p}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent-soft text-accent text-xs border border-accent/30"
+                  className="inline-flex items-center gap-1 hand text-[19px] text-ink"
                 >
                   <input type="hidden" name="person" value={p} />
                   {personLabel(p)}
@@ -812,7 +905,7 @@ function MarkerForm({
                     type="button"
                     onClick={() => removePerson(p)}
                     aria-label={`Retirer ${personLabel(p)}`}
-                    className="ml-0.5 -mr-1 w-4 h-4 rounded-full hover:bg-accent/20 inline-flex items-center justify-center text-sm leading-none"
+                    className="text-pen-red leading-none px-0.5"
                   >
                     ×
                   </button>
@@ -836,14 +929,14 @@ function MarkerForm({
               ))}
             </select>
           ) : (
-            <p className="text-xs text-muted italic">
-              Tout le monde est déjà lié.
+            <p className="hand text-[18px] text-ink-faint">
+              tout le monde est déjà noté ici.
             </p>
           )}
         </div>
 
         <div>
-          <span className="text-xs uppercase tracking-wider text-muted mb-1.5 block font-medium">
+          <span className="typed mb-1 block">
             Liée à une enquête
           </span>
           <select
@@ -860,25 +953,25 @@ function MarkerForm({
         </div>
 
         {error && (
-          <p className="text-sm text-danger bg-danger/10 border border-danger/30 rounded-lg px-3 py-2">
+          <p className="hand text-[19px] text-pen-red">
             {error}
           </p>
         )}
 
-        <div className="flex items-center justify-end gap-2 pt-2">
+        <div className="flex items-center justify-end gap-5 pt-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-full text-sm text-muted hover:text-foreground"
+            className="hand text-[20px] text-ink-soft underline underline-offset-4 hover:text-ink"
           >
-            Annuler
+            laisser tomber
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="px-4 py-2 rounded-full text-sm font-medium bg-foreground text-background hover:opacity-90 disabled:opacity-50"
+            className="stamp stamp--sm text-ink disabled:opacity-50"
           >
-            {submitting ? "…" : isEdit ? "Enregistrer" : "Créer"}
+            {submitting ? "…" : isEdit ? "Enregistrer" : "Noter"}
           </button>
         </div>
       </form>

@@ -31,7 +31,7 @@ export default async function NewNpcPage() {
 
   return (
     <div>
-      <PageTitle title="Nouveau personnage" />
+      <PageTitle title="coller une fiche" subtitle="quelqu'un de nouveau dans l'album." />
       <NpcForm action={createNpc} existingNpcs={existingNpcs} />
     </div>
   );

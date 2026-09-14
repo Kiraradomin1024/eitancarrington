@@ -30,8 +30,8 @@ export default async function EditOwnProfilePage() {
   return (
     <div>
       <PageTitle
-        title="Mon profil"
-        subtitle="Personnalise ton avatar, ton pseudo et ta bio. Ces infos apparaissent à côté de tes contributions."
+        title="mon profil"
+        subtitle="ce qui apparaît à côté de ce que tu écris : ton nom, ta tête, deux mots sur toi."
       />
       <Card>
         <form action={updateOwnProfile} className="space-y-4 max-w-xl">

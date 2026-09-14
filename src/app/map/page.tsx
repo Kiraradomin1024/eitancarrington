@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUserAndRole, canContribute } from "@/lib/auth";
-import { PageTitle } from "@/components/ui";
 import type { MapMarker, Npc, Investigation, Character } from "@/lib/types";
 import { MapClient } from "@/components/MapClient";
 
@@ -35,11 +34,6 @@ export default async function MapPage() {
 
   return (
     <div>
-      <PageTitle
-        title="Carte de Los Santos"
-        subtitle="Lieux notables, planques, contacts, indices. Clique sur la carte pour ajouter un marqueur."
-        scribble="géographie"
-      />
       <MapClient
         markers={(markers ?? []) as MapMarker[]}
         npcs={(npcs ?? []) as Pick<Npc, "id" | "name">[]}

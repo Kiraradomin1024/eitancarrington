@@ -36,14 +36,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="max-w-sm mx-auto mt-12">
-      <h1 className="font-serif text-3xl text-foreground text-center mb-2">
-        Connexion
-      </h1>
-      <p className="text-muted text-sm text-center mb-8">
-        Pour contribuer au dossier d&apos;Eitan.
+    <div className="max-w-sm mx-auto mt-10">
+      <h1 className="hand text-[44px] font-semibold leading-none">montrer patte blanche</h1>
+      <p className="hand text-[21px] text-ink-soft mt-2 mb-8">
+        le cahier se lit sans compte. pour y écrire, il faut se présenter.
       </p>
-      <Card>
+      <Card className="card-glow !pt-9">
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <Field label="Pseudo">
             <input
@@ -62,13 +60,13 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
             />
           </Field>
-          {error && <p className="text-danger text-xs">{error}</p>}
+          {error && <p className="hand text-pen-red text-[18px]">{error}</p>}
           <Button type="submit" disabled={loading}>
             {loading ? "..." : "Se connecter"}
           </Button>
           <Link
             href="/signup"
-            className="text-center text-xs text-muted hover:text-accent"
+            className="text-center hand text-[19px] text-ink-soft underline underline-offset-4 hover:text-ink"
           >
             Pas encore de compte ? S&apos;inscrire
           </Link>

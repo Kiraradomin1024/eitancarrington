@@ -47,7 +47,7 @@ export function ClueForm({
     >
       <div className="flex gap-2 items-end">
         <div className="flex-1">
-          <Field label="Nouvel indice">
+          <Field label="Nouvelle pièce au dossier">
             <input
               name="content"
               required
@@ -59,18 +59,13 @@ export function ClueForm({
           type="button"
           onClick={(e) => { e.preventDefault(); fileRef.current?.click(); }}
           disabled={uploading}
-          className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium
-                     border border-border bg-surface hover:bg-accent-soft hover:border-accent/40
-                     text-muted hover:text-foreground transition-all disabled:opacity-50 shrink-0"
+          className="hand text-[19px] text-ink-soft underline underline-offset-4 hover:text-ink disabled:opacity-50 shrink-0 pb-2"
           title="Ajouter une photo"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-            <path fillRule="evenodd" d="M1 5.25A2.25 2.25 0 013.25 3h13.5A2.25 2.25 0 0119 5.25v9.5A2.25 2.25 0 0116.75 17H3.25A2.25 2.25 0 011 14.75v-9.5zm1.5 5.81v3.69c0 .414.336.75.75.75h13.5a.75.75 0 00.75-.75v-2.69l-2.22-2.219a.75.75 0 00-1.06 0l-1.91 1.909-4.97-4.969a.75.75 0 00-1.06 0L2.5 11.06zm6.024-5.548a1.5 1.5 0 11-2.999-.001 1.5 1.5 0 012.999.001z" clipRule="evenodd" />
-          </svg>
-          {uploading ? "…" : "📷"}
+          {uploading ? "…" : "+ un cliché"}
         </button>
         <Button type="submit" disabled={pending || uploading}>
-          +
+          Verser
         </Button>
       </div>
 
@@ -80,12 +75,13 @@ export function ClueForm({
           <img
             src={imageUrl}
             alt="Aperçu"
-            className="h-20 rounded-lg border border-border object-cover"
+            className="h-20 object-cover shadow"
           />
           <button
             type="button"
             onClick={() => setImageUrl(null)}
-            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-danger text-white text-xs flex items-center justify-center hover:bg-red-600 transition-colors"
+            className="absolute -top-2 -right-3 hand text-[18px] text-pen-red"
+            aria-label="Retirer le cliché"
           >
             ×
           </button>
@@ -148,7 +144,7 @@ export function NpcLinker({
       </Field>
       <Field label="Rôle">
         <select name="role" defaultValue="suspect">
-          <option value="investigator">🔍 Enquêteur</option>
+          <option value="investigator">Enquêteur</option>
           <option value="suspect">Suspect</option>
           <option value="witness">Témoin</option>
           <option value="victim">Victime</option>
@@ -158,7 +154,7 @@ export function NpcLinker({
         </select>
       </Field>
       <Button type="submit" disabled={pending} className="w-full">
-        {pending ? "..." : "Lier"}
+        {pending ? "..." : "Ajouter au dossier"}
       </Button>
     </form>
   );

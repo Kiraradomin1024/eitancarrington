@@ -33,16 +33,16 @@ export default async function AdminPage() {
   return (
     <div>
       <PageTitle
-        title="Admin"
-        subtitle="Gestion des contributeurs et de la fiche d'Eitan."
+        title="l'arrière du cahier"
+        subtitle="qui a le droit d'écrire, et ce qui a été écrit."
         action={
-          <LinkButton href="/admin/character">Modifier la fiche</LinkButton>
+          <LinkButton href="/admin/character">Corriger ma fiche</LinkButton>
         }
       />
 
       {pending.length > 0 && (
         <section className="mb-10">
-          <h2 className="font-serif text-2xl text-warn mb-3 title-rule">
+          <h2 className="hand text-[28px] font-semibold text-ink mb-3 ">
             En attente d&apos;approbation ({pending.length})
           </h2>
           <p className="text-muted text-sm mb-4">
@@ -58,7 +58,7 @@ export default async function AdminPage() {
       )}
 
       <section className="mb-10">
-        <h2 className="font-serif text-2xl text-accent mb-3 title-rule">
+        <h2 className="hand text-[28px] font-semibold text-ink mb-3 ">
           Contributeurs ({contributors.length})
         </h2>
         {contributors.length === 0 ? (
@@ -77,7 +77,7 @@ export default async function AdminPage() {
       </section>
 
       <section className="mb-10">
-        <h2 className="font-serif text-2xl text-foreground mb-3 title-rule">
+        <h2 className="hand text-[28px] font-semibold text-ink mb-3 ">
           Admins ({admins.length})
         </h2>
         <div className="space-y-2">
@@ -89,7 +89,7 @@ export default async function AdminPage() {
 
       {isKirara && (
         <section className="mb-10">
-          <h2 className="font-serif text-2xl text-foreground mb-3 title-rule">
+          <h2 className="hand text-[28px] font-semibold text-ink mb-3 ">
             Backup
           </h2>
           <p className="text-muted text-sm mb-4">
@@ -102,7 +102,7 @@ export default async function AdminPage() {
       )}
 
       <section>
-        <h2 className="font-serif text-2xl text-foreground mb-3 title-rule">
+        <h2 className="hand text-[28px] font-semibold text-ink mb-3 ">
           Activité récente
         </h2>
         <p className="text-muted text-sm mb-4">

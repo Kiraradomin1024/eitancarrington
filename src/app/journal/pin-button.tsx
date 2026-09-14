@@ -2,6 +2,7 @@
 
 import { togglePin } from "./actions";
 
+/** Une punaise : épingler un jour en haut de son chapitre */
 export function PinButton({
   dayId,
   pinned,
@@ -18,17 +19,14 @@ export function PinButton({
       <button
         type="submit"
         title={pinned ? "Désépingler" : "Épingler"}
+        aria-label={pinned ? "Désépingler ce jour" : "Épingler ce jour"}
         className={
-          "p-1.5 rounded-md border transition-all " +
-          (pinned
-            ? "bg-accent/20 border-accent/40 text-accent hover:bg-accent/30"
-            : "bg-surface-2 border-border text-muted hover:text-accent hover:border-accent/40")
+          "hand text-[18px] leading-none underline underline-offset-4 " +
+          (pinned ? "text-pen-red" : "text-ink-soft hover:text-ink")
         }
         onClick={(e) => e.stopPropagation()}
       >
-        <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
-          <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
-        </svg>
+        {pinned ? "désépingler" : "épingler"}
       </button>
     </form>
   );

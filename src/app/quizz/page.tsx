@@ -71,8 +71,8 @@ export default async function QuizPage() {
   return (
     <div>
       <PageTitle
-        title="Quizz"
-        subtitle="Réponds aux questions sur l'univers d'Eitan. Une seule chance par question."
+        title="l'interro"
+        subtitle="des questions sur ma vie, mes proches, mes affaires. une seule chance par question."
         scribble="combien tu sais ?"
       />
       <QuizClient
